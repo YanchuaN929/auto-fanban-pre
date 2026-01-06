@@ -1,0 +1,46 @@
+{
+  "dxf": "dxf\\图签.dxf",
+  "spec": "documents\\参数规范.yaml",
+  "text_items_count_by_space": {
+    "Model": 11,
+    "布局1": 0
+  },
+  "diagnostics_by_space": {
+    "Model": {
+      "anchor_text_items": [],
+      "external19_candidates_top20": [],
+      "internal_code_candidates_top20": [],
+      "engineering_no_candidates_top20": [],
+      "scale_text_candidates_top20": [
+        {
+          "value": "1:100",
+          "x": 14797.24777923711,
+          "y": -10799.0786292994,
+          "src": "msp:MTEXT"
+        }
+      ],
+      "page_info_candidates_top20": []
+    },
+    "布局1": {
+      "anchor_text_items": [],
+      "external19_candidates_top20": [],
+      "internal_code_candidates_top20": [],
+      "engineering_no_candidates_top20": [],
+      "scale_text_candidates_top20": [],
+      "page_info_candidates_top20": []
+    }
+  },
+  "anchor_global_combo_count_by_space": {
+    "Model": {
+      "has_combo": false,
+      "company_count": 0,
+      "cnpe_count": 0
+    },
+    "布局1": {
+      "has_combo": false,
+      "company_count": 0,
+      "cnpe_count": 0
+    }
+  },
+  "outer_frame_candidates": []
+}

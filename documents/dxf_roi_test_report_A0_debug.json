@@ -1,0 +1,719 @@
+{
+  "dxf": "dxf\\A0.dxf",
+  "spec": "documents\\参数规范.yaml",
+  "text_items_count_by_space": {
+    "Model": 96,
+    "布局1": 0
+  },
+  "diagnostics_by_space": {
+    "Model": {
+      "anchor_text_items": [
+        {
+          "x": 54991.01454483847,
+          "y": 574525.3719668818,
+          "text": "nor transmitted without the written  permission of CNPE .",
+          "src": "space:virtual:virtual:TEXT"
+        },
+        {
+          "x": 54986.257911892826,
+          "y": 574724.3131631596,
+          "text": "This document is the property of China Nuclear Power Engineering CO.,LTD (CNPE) , no part of this document may be",
+          "src": "space:virtual:virtual:TEXT"
+        },
+        {
+          "x": 54970.516819938566,
+          "y": 574934.0786951476,
+          "text": "本文件产权属中国核电工程有限公司（CNPE）所有，未经书面许可，不得以任何方式复制、传播、发表和外传。",
+          "src": "space:virtual:virtual:TEXT"
+        },
+        {
+          "x": 62528.13930991805,
+          "y": 573801.2372748151,
+          "text": "CNPE",
+          "src": "space:virtual:virtual:TEXT"
+        }
+      ],
+      "external19_candidates_top20": [],
+      "internal_code_candidates_top20": [],
+      "engineering_no_candidates_top20": [
+        {
+          "value": "2016",
+          "x": 59050.56235254598,
+          "y": 573359.1931406627,
+          "src": "space:virtual:virtual:MTEXT"
+        }
+      ],
+      "scale_text_candidates_top20": [
+        {
+          "value": "1:100",
+          "x": 63503.12543559547,
+          "y": 572120.0329209161,
+          "src": "space:MTEXT"
+        }
+      ],
+      "page_info_candidates_top20": []
+    },
+    "布局1": {
+      "anchor_text_items": [],
+      "external19_candidates_top20": [],
+      "internal_code_candidates_top20": [],
+      "engineering_no_candidates_top20": [],
+      "scale_text_candidates_top20": [],
+      "page_info_candidates_top20": []
+    }
+  },
+  "anchor_global_combo_count_by_space": {
+    "Model": {
+      "has_combo": true,
+      "company_count": 2,
+      "cnpe_count": 4
+    },
+    "布局1": {
+      "has_combo": false,
+      "company_count": 0,
+      "cnpe_count": 0
+    }
+  },
+  "outer_frame_candidates": [
+    {
+      "candidate_index": 0,
+      "space": "Model",
+      "outer": {
+        "xmin": 4934.441322045517,
+        "ymin": 571006.0686592321,
+        "xmax": 64384.44132180835,
+        "ymax": 613056.068659064
+      },
+      "fit": {
+        "paper_variant_id": "CNPE_A0H",
+        "sx": 49.99999999980053,
+        "sy": 49.99999999980012,
+        "geom_scale_factor": 49.99999999980032,
+        "score": 8.242295734850078e-16,
+        "rotated": true,
+        "roi_profile_id_default": "RB_PROFILE_BASE10"
+      },
+      "anchor_ok": true,
+      "anchor_combo_ok": true,
+      "anchor_combo_counts": {
+        "company_count": 2,
+        "cnpe_count": 4
+      },
+      "anchor_search_steps": [
+        {
+          "step": 0,
+          "rect": {
+            "xmin": 4934.441322045517,
+            "ymin": 571006.0686592321,
+            "xmax": 64384.44132180835,
+            "ymax": 613056.068659064
+          },
+          "items_count": 94,
+          "has_combo": true,
+          "company_count": 2,
+          "cnpe_count": 4
+        }
+      ],
+      "anchor_hits": [
+        {
+          "roi_name": "图框定位-中国核电工程有限公司",
+          "roi": {
+            "xmin": 54704.44132184697,
+            "ymin": 573590.0686592219,
+            "xmax": 64064.44132180962,
+            "ymax": 574422.0686592184
+          },
+          "text": "中 国 核 电 工 程 有 限 公 司\nCNPE\nChina Nuclear Power Engineering Co., Ltd",
+          "hit": true,
+          "count": 3
+        }
+      ],
+      "titleblock": {
+        "external_code": {
+          "ok": true,
+          "value": "JD1NH120001B25C42SD",
+          "raw": "D\nJ 1 N H 1 2 0 0 0 1 B 2 5 C 4 2 D\nS\nDOC.NO",
+          "note": "rebuilt_from_single_chars",
+          "rebuilt_tokens_debug": [
+            {
+              "ch": "J",
+              "x": 56032.347588310804,
+              "y": 575457.7260689716,
+              "src": "space:virtual:virtual:MTEXT"
+            },
+            {
+              "ch": "D",
+              "x": 56470.84676766218,
+              "y": 575465.5518619693,
+              "src": "space:virtual:virtual:MTEXT"
+            },
+            {
+              "ch": "1",
+              "x": 56932.34761795023,
+              "y": 575457.7260689716,
+              "src": "space:virtual:virtual:MTEXT"
+            },
+            {
+              "ch": "N",
+              "x": 57263.370936415355,
+              "y": 575457.7260601554,
+              "src": "space:virtual:virtual:MTEXT"
+            },
+            {
+              "ch": "H",
+              "x": 57732.34761795023,
+              "y": 575457.7260601554,
+              "src": "space:virtual:virtual:MTEXT"
+            },
+            {
+              "ch": "1",
+              "x": 58132.34761795023,
+              "y": 575457.7260689716,
+              "src": "space:virtual:virtual:MTEXT"
+            },
+            {
+              "ch": "2",
+              "x": 58532.34761795023,
+              "y": 575457.7260689716,
+              "src": "space:virtual:virtual:MTEXT"
+            },
+            {
+              "ch": "0",
+              "x": 58932.34761795023,
+              "y": 575457.7260689716,
+              "src": "space:virtual:virtual:MTEXT"
+            },
+            {
+              "ch": "0",
+              "x": 59332.34761795023,
+              "y": 575457.7260689716,
+              "src": "space:virtual:virtual:MTEXT"
+            },
+            {
+              "ch": "0",
+              "x": 59732.34761795023,
+              "y": 575457.7260689716,
+              "src": "space:virtual:virtual:MTEXT"
+            },
+            {
+              "ch": "1",
+              "x": 60132.34761795023,
+              "y": 575457.7260689716,
+              "src": "space:virtual:virtual:MTEXT"
+            },
+            {
+              "ch": "B",
+              "x": 60532.34761795023,
+              "y": 575457.7260689716,
+              "src": "space:virtual:virtual:MTEXT"
+            },
+            {
+              "ch": "2",
+              "x": 60932.34761795023,
+              "y": 575457.7260689716,
+              "src": "space:virtual:virtual:MTEXT"
+            },
+            {
+              "ch": "5",
+              "x": 61332.34761795023,
+              "y": 575457.7260689716,
+              "src": "space:virtual:virtual:MTEXT"
+            },
+            {
+              "ch": "C",
+              "x": 61732.34761795023,
+              "y": 575457.7260689716,
+              "src": "space:virtual:virtual:MTEXT"
+            },
+            {
+              "ch": "4",
+              "x": 62132.34761795023,
+              "y": 575457.7260689716,
+              "src": "space:virtual:virtual:MTEXT"
+            },
+            {
+              "ch": "2",
+              "x": 62606.845691332855,
+              "y": 575457.7260689716,
+              "src": "space:virtual:virtual:MTEXT"
+            },
+            {
+              "ch": "S",
+              "x": 63116.91805450308,
+              "y": 575454.7183047838,
+              "src": "space:virtual:virtual:MTEXT"
+            },
+            {
+              "ch": "D",
+              "x": 63629.25037552321,
+              "y": 575457.7260689716,
+              "src": "space:virtual:virtual:MTEXT"
+            }
+          ]
+        },
+        "internal_code": {
+          "ok": false,
+          "value": null,
+          "raw": "20161NH-JGS01",
+          "error": "regex_no_match"
+        },
+        "engineering_no": {
+          "ok": true,
+          "value": "2016",
+          "raw": "2016"
+        },
+        "subitem_no": {
+          "ok": true,
+          "value": "NH",
+          "raw": "NH"
+        },
+        "paper_size_text": {
+          "ok": true,
+          "value": "A0",
+          "raw": "A0"
+        },
+        "discipline": {
+          "ok": true,
+          "value": "结构",
+          "raw": "结构"
+        },
+        "scale_text": {
+          "ok": true,
+          "value": "1:100",
+          "raw": "1:100",
+          "scale_denominator": 100
+        },
+        "page_info": {
+          "ok": false,
+          "value": null,
+          "raw": "1\nX",
+          "error": "regex_no_match"
+        },
+        "title_cn": {
+          "ok": true,
+          "value": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
+          "raw": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles."
+        },
+        "revision": {
+          "ok": true,
+          "value": "A",
+          "raw": "B\nA"
+        },
+        "status": {
+          "ok": true,
+          "value": "2025.12 CFC",
+          "raw": "CFC\n2025.12 CFC"
+        },
+        "date": {
+          "ok": true,
+          "value": "A 2025.12 CFC",
+          "raw": "2026.01\nA 2025.12 CFC"
+        }
+      },
+      "debug_rois": {
+        "external_code": {
+          "roi_field_name": "外部编码",
+          "roi": {
+            "xmin": 54694.54132184701,
+            "ymin": 575196.0686592154,
+            "xmax": 64054.541321809666,
+            "ymax": 575716.0686592134
+          },
+          "raw": "D\nJ 1 N H 1 2 0 0 0 1 B 2 5 C 4 2 D\nS\nDOC.NO",
+          "count": 20
+        },
+        "internal_code": {
+          "roi_field_name": "内部编码",
+          "roi": {
+            "xmin": 61742.44132181889,
+            "ymin": 573096.0686592237,
+            "xmax": 63926.441321810176,
+            "ymax": 573616.0686592218
+          },
+          "raw": "20161NH-JGS01",
+          "count": 1
+        },
+        "engineering_no": {
+          "roi_field_name": "工程号",
+          "roi": {
+            "xmin": 58564.44132183157,
+            "ymin": 573096.0686592237,
+            "xmax": 59604.44132182742,
+            "ymax": 573616.0686592218
+          },
+          "raw": "2016",
+          "count": 1
+        },
+        "subitem_no": {
+          "roi_field_name": "子项号",
+          "roi": {
+            "xmin": 60164.44132182519,
+            "ymin": 573096.0686592237,
+            "xmax": 61204.44132182104,
+            "ymax": 573616.0686592218
+          },
+          "raw": "NH",
+          "count": 1
+        },
+        "paper_size_text": {
+          "roi_field_name": "图幅",
+          "roi": {
+            "xmin": 63068.521321813605,
+            "ymin": 572698.0686592254,
+            "xmax": 63896.3613218103,
+            "ymax": 573114.0686592237
+          },
+          "raw": "A0",
+          "count": 1
+        },
+        "discipline": {
+          "roi_field_name": "专业",
+          "roi": {
+            "xmin": 63068.521321813605,
+            "ymin": 572298.0686592269,
+            "xmax": 63896.3613218103,
+            "ymax": 572714.0686592254
+          },
+          "raw": "结构",
+          "count": 1
+        },
+        "scale_text": {
+          "roi_field_name": "比例",
+          "roi": {
+            "xmin": 63068.4413218136,
+            "ymin": 571898.0686592285,
+            "xmax": 63900.44132181028,
+            "ymax": 572314.0686592269
+          },
+          "raw": "1:100",
+          "count": 1
+        },
+        "page_info": {
+          "roi_field_name": "张数",
+          "roi": {
+            "xmin": 62456.44132181604,
+            "ymin": 571498.0686592301,
+            "xmax": 63912.441321810235,
+            "ymax": 571914.0686592285
+          },
+          "raw": "1\nX",
+          "count": 2
+        },
+        "title_cn": {
+          "roi_field_name": "图纸标题",
+          "roi": {
+            "xmin": 57894.44132183424,
+            "ymin": 571474.0686592303,
+            "xmax": 62574.441321815575,
+            "ymax": 573138.0686592236
+          },
+          "raw": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
+          "count": 4
+        },
+        "revision": {
+          "roi_field_name": "版次",
+          "roi": {
+            "xmin": 54872.6393218463,
+            "ymin": 576882.3066592086,
+            "xmax": 55486.343321843844,
+            "ymax": 578117.9306592037
+          },
+          "raw": "B\nA",
+          "count": 2
+        },
+        "status": {
+          "roi_field_name": "状态",
+          "roi": {
+            "xmin": 56358.54132184037,
+            "ymin": 576882.3066592086,
+            "xmax": 57190.541321837045,
+            "ymax": 578117.9306592037
+          },
+          "raw": "CFC\n2025.12 CFC",
+          "count": 3
+        },
+        "date": {
+          "roi_field_name": "日期",
+          "roi": {
+            "xmin": 55456.541321843964,
+            "ymin": 576882.3066592086,
+            "xmax": 56392.54132184023,
+            "ymax": 578117.9306592037
+          },
+          "raw": "2026.01\nA 2025.12 CFC",
+          "count": 4
+        }
+      },
+      "scale_consistency": {
+        "geom_scale_factor": 49.99999999980032,
+        "scale_denominator": 100.0,
+        "mismatch": true,
+        "flags_added": [
+          "比例不一致"
+        ]
+      }
+    },
+    {
+      "candidate_index": 1,
+      "space": "Model",
+      "outer": {
+        "xmin": 6184.441322042607,
+        "ymin": 571506.0686592303,
+        "xmax": 63880.44132181045,
+        "ymax": 612556.068659066
+      },
+      "fit": {
+        "paper_variant_id": "CNPE_A0H",
+        "sx": 48.52481076515378,
+        "sy": 48.81093935771194,
+        "geom_scale_factor": 48.66787506143286,
+        "score": 0.0005879208660681823,
+        "rotated": true,
+        "roi_profile_id_default": "RB_PROFILE_BASE10"
+      },
+      "anchor_ok": true,
+      "anchor_combo_ok": true,
+      "anchor_combo_counts": {
+        "company_count": 2,
+        "cnpe_count": 4
+      },
+      "anchor_search_steps": [
+        {
+          "step": 0,
+          "rect": {
+            "xmin": 6184.441322042607,
+            "ymin": 571506.0686592303,
+            "xmax": 63880.44132181045,
+            "ymax": 612556.068659066
+          },
+          "items_count": 62,
+          "has_combo": true,
+          "company_count": 2,
+          "cnpe_count": 4
+        }
+      ],
+      "anchor_hits": [
+        {
+          "roi_name": "图框定位-中国核电工程有限公司",
+          "roi": {
+            "xmin": 54486.037957676686,
+            "ymin": 574028.6180052368,
+            "xmax": 63569.88253291346,
+            "ymax": 574840.8320361491
+          },
+          "text": "reproduced by any means ,\nThis document is the property of China Nuclear Power Engineering CO.,LTD (CNPE) , no part of this document may be\nnor transmitted without the written permission of CNPE .",
+          "hit": true,
+          "count": 3
+        }
+      ],
+      "titleblock": {
+        "external_code": {
+          "ok": false,
+          "value": null,
+          "raw": "浙 江 金 七 门 核 电 厂 1、2 号 机 组",
+          "error": "fixed_len_19_not_found",
+          "clean": "12"
+        },
+        "internal_code": {
+          "ok": false,
+          "value": null,
+          "raw": "CNPE",
+          "error": "regex_no_match"
+        },
+        "engineering_no": {
+          "ok": false,
+          "value": null,
+          "raw": "",
+          "error": "regex_no_match"
+        },
+        "subitem_no": {
+          "ok": true,
+          "value": "",
+          "raw": ""
+        },
+        "paper_size_text": {
+          "ok": true,
+          "value": "20161NH-JGS01",
+          "raw": "20161NH-JGS01"
+        },
+        "discipline": {
+          "ok": true,
+          "value": "A0",
+          "raw": "A0"
+        },
+        "scale_text": {
+          "ok": false,
+          "value": null,
+          "raw": "结构",
+          "error": "regex_no_match"
+        },
+        "page_info": {
+          "ok": false,
+          "value": null,
+          "raw": "1:100",
+          "error": "regex_no_match"
+        },
+        "title_cn": {
+          "ok": true,
+          "value": "2016 NH\n有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
+          "raw": "2016 NH\n有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles."
+        },
+        "revision": {
+          "ok": true,
+          "value": "B",
+          "raw": "B"
+        },
+        "status": {
+          "ok": true,
+          "value": "CFC",
+          "raw": "CFC"
+        },
+        "date": {
+          "ok": true,
+          "value": "B 2026.01",
+          "raw": "B 2026.01"
+        }
+      },
+      "debug_rois": {
+        "external_code": {
+          "roi_field_name": "外部编码",
+          "roi": {
+            "xmin": 54476.430045145185,
+            "ymin": 575596.4253774065,
+            "xmax": 63560.27462038196,
+            "ymax": 576104.0591467266
+          },
+          "raw": "浙 江 金 七 门 核 电 厂 1、2 号 机 组",
+          "count": 1
+        },
+        "internal_code": {
+          "roi_field_name": "内部编码",
+          "roi": {
+            "xmin": 61316.39032097973,
+            "ymin": 573546.3659243827,
+            "xmax": 63435.95405520164,
+            "ymax": 574053.9996937028
+          },
+          "raw": "CNPE",
+          "count": 1
+        },
+        "engineering_no": {
+          "roi_field_name": "工程号",
+          "roi": {
+            "xmin": 58232.15334874655,
+            "ymin": 573546.3659243827,
+            "xmax": 59241.469412661754,
+            "ymax": 574053.9996937028
+          },
+          "raw": "",
+          "count": 0
+        },
+        "subitem_no": {
+          "roi_field_name": "子项号",
+          "roi": {
+            "xmin": 59784.947293231475,
+            "ymin": 573546.3659243827,
+            "xmax": 60794.26335714667,
+            "ymax": 574053.9996937028
+          },
+          "raw": "",
+          "count": 0
+        },
+        "paper_size_text": {
+          "roi_field_name": "图幅",
+          "roi": {
+            "xmin": 62603.34594216883,
+            "ymin": 573157.8308470952,
+            "xmax": 63406.761529045325,
+            "ymax": 573563.9378625514
+          },
+          "raw": "20161NH-JGS01",
+          "count": 1
+        },
+        "discipline": {
+          "roi_field_name": "专业",
+          "roi": {
+            "xmin": 62603.34594216883,
+            "ymin": 572767.3433322335,
+            "xmax": 63406.761529045325,
+            "ymax": 573173.4503476897
+          },
+          "raw": "A0",
+          "count": 1
+        },
+        "scale_text": {
+          "roi_field_name": "比例",
+          "roi": {
+            "xmin": 62603.2683024716,
+            "ymin": 572376.8558173719,
+            "xmax": 63410.721153603765,
+            "ymax": 572782.9628328279
+          },
+          "raw": "结构",
+          "count": 1
+        },
+        "page_info": {
+          "roi_field_name": "张数",
+          "roi": {
+            "xmin": 62009.32461870612,
+            "ymin": 571986.3683025101,
+            "xmax": 63422.3671081874,
+            "ymax": 572392.4753179663
+          },
+          "raw": "1:100",
+          "count": 1
+        },
+        "title_cn": {
+          "roi_field_name": "图纸标题",
+          "roi": {
+            "xmin": 57581.92088449349,
+            "ymin": 571962.9390516185,
+            "xmax": 62123.84317211188,
+            "ymax": 573587.3671134431
+          },
+          "raw": "2016 NH\n有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
+          "count": 6
+        },
+        "revision": {
+          "roi_field_name": "版次",
+          "roi": {
+            "xmin": 54649.27348009823,
+            "ymin": 577242.5625926199,
+            "xmax": 55244.87088941459,
+            "ymax": 578448.8019552785
+          },
+          "raw": "B",
+          "count": 1
+        },
+        "status": {
+          "roi_field_name": "状态",
+          "roi": {
+            "xmin": 56091.335747409496,
+            "ymin": 577242.5625926199,
+            "xmax": 56898.78859854166,
+            "ymax": 578448.8019552785
+          },
+          "raw": "CFC",
+          "count": 1
+        },
+        "date": {
+          "roi_field_name": "日期",
+          "roi": {
+            "xmin": 55215.94816120613,
+            "ymin": 577242.5625926199,
+            "xmax": 56124.3326187298,
+            "ymax": 578448.8019552785
+          },
+          "raw": "B 2026.01",
+          "count": 2
+        }
+      },
+      "scale_consistency": {
+        "geom_scale_factor": 48.66787506143286,
+        "scale_denominator": null,
+        "mismatch": null,
+        "flags_added": []
+      }
+    }
+  ]
+}
