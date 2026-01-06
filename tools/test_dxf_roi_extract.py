@@ -29,7 +29,8 @@ class Rect:
         return max(0.0, self.w) * max(0.0, self.h)
 
     def contains_point(self, x: float, y: float) -> bool:
-        return self.xmin <= x <= self.xmax and self.ymin <= y <= self.ymax
+        # half-open to avoid double-counting items that lie exactly on shared borders of adjacent ROIs
+        return self.xmin <= x < self.xmax and self.ymin <= y < self.ymax
 
     def intersects(self, other: "Rect") -> bool:
         return not (self.xmax < other.xmin or self.xmin > other.xmax or self.ymax < other.ymin or self.ymin > other.ymax)
@@ -67,7 +68,32 @@ def iter_text_items_in_space(space: Any) -> Iterable[TextItem]:
         if e.dxftype() == "TEXT":
             t = (e.dxf.text or "").strip()
             p = e.dxf.insert
-            return TextItem(float(p.x), float(p.y), t, src)
+            x = float(p.x)
+            y = float(p.y)
+            # Approximate bbox to catch cases where insertion point is outside ROI but glyph box intersects ROI.
+            try:
+                h = float(getattr(e.dxf, "height", 2.5) or 2.5)
+            except Exception:
+                h = 2.5
+            s0 = t.replace(" ", "")
+            w = max(1, len(s0)) * h * 0.6
+            hh = h * 1.2
+            halign = int(getattr(e.dxf, "halign", 0) or 0)  # 0=left,1=center,2=right (common)
+            valign = int(getattr(e.dxf, "valign", 0) or 0)  # 0=baseline,1=bottom,2=middle,3=top
+            if halign == 1:
+                xmin, xmax = x - w / 2, x + w / 2
+            elif halign == 2:
+                xmin, xmax = x - w, x
+            else:
+                xmin, xmax = x, x + w
+            # baseline ~= bottom for our purpose
+            if valign == 3:
+                ymin, ymax = y - hh, y
+            elif valign == 2:
+                ymin, ymax = y - hh / 2, y + hh / 2
+            else:
+                ymin, ymax = y, y + hh
+            return TextItem(x, y, t, src, bbox=Rect(xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax))
         if e.dxftype() == "MTEXT":
             try:
                 t = (e.plain_text() or "").strip()
@@ -115,7 +141,31 @@ def iter_text_items_in_space(space: Any) -> Iterable[TextItem]:
         if e.dxftype() == "ATTRIB":
             t = (e.dxf.text or "").strip()
             p = e.dxf.insert
-            return TextItem(float(p.x), float(p.y), t, src)
+            x = float(p.x)
+            y = float(p.y)
+            # Similar bbox approximation as TEXT
+            try:
+                h = float(getattr(e.dxf, "height", 2.5) or 2.5)
+            except Exception:
+                h = 2.5
+            s0 = t.replace(" ", "")
+            w = max(1, len(s0)) * h * 0.6
+            hh = h * 1.2
+            halign = int(getattr(e.dxf, "halign", 0) or 0)
+            valign = int(getattr(e.dxf, "valign", 0) or 0)
+            if halign == 1:
+                xmin, xmax = x - w / 2, x + w / 2
+            elif halign == 2:
+                xmin, xmax = x - w, x
+            else:
+                xmin, xmax = x, x + w
+            if valign == 3:
+                ymin, ymax = y - hh, y
+            elif valign == 2:
+                ymin, ymax = y - hh / 2, y + hh / 2
+            else:
+                ymin, ymax = y, y + hh
+            return TextItem(x, y, t, src, bbox=Rect(xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax))
         return None
 
     def walk_entity(ent: Any, src_prefix: str, depth: int) -> Iterable[TextItem]:
@@ -147,6 +197,77 @@ def iter_text_items_in_space(space: Any) -> Iterable[TextItem]:
     for e in space:
         for item in walk_entity(e, "space", 0):
             yield item
+
+
+def parse_rev_table_field(
+    *,
+    field: str,
+    roi_items: list[TextItem],
+    y_tol: float,
+    expected_revision: Optional[str],
+) -> dict[str, Any]:
+    """
+    Revision table cells sometimes contain combined row text like: "A 2025.12 CFC".
+    We parse by row (y clustering), and then extract only the needed column (date/status)
+    preferring the row whose rev matches expected_revision.
+    """
+    import re
+
+    if field not in {"date", "status"}:
+        return {"ok": True, "value": "", "raw": "", "note": "unsupported_rev_table_field"}
+
+    lines = cluster_lines(roi_items, y_tol=y_tol)
+    row_texts: list[tuple[float, str]] = []
+    for line in lines:
+        y = sum(it.y for it in line) / max(1, len(line))
+        s = " ".join(it.text for it in line if it.text).strip()
+        s = " ".join(s.split())
+        if s:
+            row_texts.append((y, s))
+
+    # bottom first = latest
+    row_texts.sort(key=lambda t: t[0])
+
+    re_full = re.compile(r"^(?P<rev>[A-Z])\s+(?P<date>\d{4}\.\d{2})\s+(?P<status>[A-Z0-9]+)$")
+    re_date_status = re.compile(r"^(?P<date>\d{4}\.\d{2})\s+(?P<status>[A-Z0-9]+)$")
+    re_date_only = re.compile(r"^(?P<date>\d{4}\.\d{2})$")
+    re_status_only = re.compile(r"^(?P<status>[A-Z0-9]+)$")
+
+    parsed_rows: list[dict[str, Any]] = []
+    for y, s in row_texts:
+        m = re_full.match(s)
+        if m:
+            parsed_rows.append({"y": y, "raw": s, "rev": m.group("rev"), "date": m.group("date"), "status": m.group("status")})
+            continue
+        m = re_date_status.match(s)
+        if m:
+            parsed_rows.append({"y": y, "raw": s, "rev": None, "date": m.group("date"), "status": m.group("status")})
+            continue
+        m = re_date_only.match(s)
+        if m:
+            parsed_rows.append({"y": y, "raw": s, "rev": None, "date": m.group("date"), "status": None})
+            continue
+        m = re_status_only.match(s)
+        if m:
+            parsed_rows.append({"y": y, "raw": s, "rev": None, "date": None, "status": m.group("status")})
+            continue
+
+    # choose best row by revision match first, else latest row that has the requested field
+    chosen = None
+    if expected_revision:
+        for r in parsed_rows:
+            if r.get("rev") == expected_revision and r.get(field):
+                chosen = r
+    if chosen is None:
+        for r in reversed(parsed_rows):
+            if r.get(field):
+                chosen = r
+                break
+
+    if chosen is None:
+        return {"ok": False, "value": None, "raw": join_text(roi_items, y_tol=y_tol, line_join="\n"), "error": "rev_table_no_match"}
+
+    return {"ok": True, "value": chosen.get(field), "raw": chosen.get("raw", ""), "note": "rev_table_row_parse", "revision_ref": expected_revision}
 
 
 def clean_alnum(text: str) -> str:
@@ -227,6 +348,39 @@ def extract_fixed19_from_single_chars(
     selected = toks if len(toks) == fixed_len else toks[-fixed_len:]
     code = "".join(t[2] for t in selected)
     return code, debug
+
+
+def extract_page_info_two_tokens_by_x(roi_items: list[TextItem]) -> tuple[Optional[str], Optional[str]]:
+    """
+    Many DXFs draw the labels "共/张/第/张" as graphics, leaving only two variable cells as text.
+    Rule: left token = page_total, right token = page_index. Tokens are sorted by x.
+    """
+    toks: list[tuple[float, str]] = []
+    for it in roi_items:
+        s = clean_alnum((it.text or "").upper())
+        if not s:
+            continue
+        # keep small tokens only (avoid swallowing other long strings if ROI is slightly off)
+        if len(s) <= 4:
+            toks.append((it.x, s))
+    toks.sort(key=lambda t: t[0])
+    if len(toks) < 2:
+        return None, None
+    return toks[0][1], toks[1][1]
+
+
+def pick_top_text_by_y(roi_items: list[TextItem], *, max_candidates: int = 20) -> tuple[Optional[str], list[dict[str, Any]]]:
+    """
+    Pick the top-most (max y) text item in ROI, using insertion point only.
+    Returns (selected_text, candidates_debug_sorted_by_y_desc).
+    """
+    cands = sorted(roi_items, key=lambda it: (-it.y, it.x))
+    debug = [{"text": (it.text or "").strip(), "x": it.x, "y": it.y, "src": it.src} for it in cands[:max_candidates]]
+    for it in cands:
+        s = (it.text or "").strip()
+        if s:
+            return s, debug
+    return None, debug
 
 
 def rect_from_rb_offset(
@@ -387,6 +541,82 @@ def fit_scale(
 def parse_field(var_name: str, raw: str, parse_cfg: dict[str, Any]) -> dict[str, Any]:
     t = (raw or "").strip()
     ptype = parse_cfg.get("type")
+    if ptype == "internal_code_cnpe":
+        import re
+
+        patterns = parse_cfg.get("patterns") or {}
+        full_pat = patterns.get("full") or r"^(?P<prefix>[A-Z0-9]{7})-(?P<mid>[A-Z0-9]{5})-(?P<seq>[0-9]{3})$"
+        short_pat = patterns.get("short") or r"^(?P<prefix>[A-Z0-9]{7})-(?P<mid>[A-Z0-9]{5})$"
+        mid_album_pat = patterns.get("mid_album") or r"^(?P<mid3>[A-Z0-9]{3})(?P<album>[0-9]{2})$"
+
+        m = re.match(full_pat, t)
+        kind = "full" if m else None
+        if not m:
+            m = re.match(short_pat, t)
+            kind = "short" if m else None
+        if not m:
+            return {"ok": False, "value": None, "raw": t, "error": "internal_code_no_match"}
+
+        prefix = m.group("prefix") if "prefix" in m.groupdict() else None
+        mid = m.group("mid") if "mid" in m.groupdict() else None
+        out: dict[str, Any] = {"ok": True, "value": m.group(0), "raw": t, "variant": kind}
+        if prefix and mid:
+            out["internal_code_base"] = f"{prefix}-{mid}"
+            mm = re.match(mid_album_pat, mid)
+            if mm:
+                out["album_code"] = mm.group("album")
+        if kind == "full":
+            try:
+                out["internal_code_seq"] = int(m.group("seq"))
+            except Exception:
+                out["internal_code_seq"] = m.groupdict().get("seq")
+        return out
+
+    if ptype == "derived_from_internal_code_album_code":
+        # This parse type is handled in a post-pass (needs internal_code parse result).
+        return {"ok": False, "value": None, "raw": t, "error": "derived_field_requires_postpass"}
+
+    if ptype == "page_info_auto":
+        import re
+
+        # 1) try phrase regex (if the static labels are extractable as text)
+        pattern = parse_cfg.get("pattern")
+        if pattern:
+            m = re.search(str(pattern), t)
+            if m:
+                out: dict[str, Any] = {"ok": True, "value": m.group(0), "raw": t}
+                if "output" in parse_cfg and isinstance(parse_cfg["output"], dict):
+                    out_map = parse_cfg["output"]
+                    for k, group_idx in out_map.items():
+                        try:
+                            out[k] = float(m.group(int(group_idx))) if "." in m.group(int(group_idx)) else int(m.group(int(group_idx)))
+                        except Exception:
+                            out[k] = m.group(int(group_idx))
+                return out
+
+        # 2) fallback: many DXFs only have two variable cells inside ROI, e.g. "1" and "X"
+        parts: list[str] = []
+        for ln in t.splitlines():
+            ln = ln.strip()
+            if not ln:
+                continue
+            # keep A-Z/0-9 and X, drop other chars
+            s = "".join(ch for ch in ln.upper() if ("A" <= ch <= "Z") or ("0" <= ch <= "9"))
+            if s:
+                parts.append(s)
+        if len(parts) >= 2:
+            total_s, idx_s = parts[0], parts[1]
+            try:
+                total = int(total_s)
+            except Exception:
+                total = total_s
+            try:
+                idx = int(idx_s)
+            except Exception:
+                idx = idx_s
+            return {"ok": True, "value": None, "raw": t, "page_total": total, "page_index": idx, "note": "page_info_two_tokens_fallback"}
+        return {"ok": False, "value": None, "raw": t, "error": "page_info_no_match"}
+
     if ptype == "regex":
         import re
 
@@ -503,7 +733,13 @@ def main() -> int:
         for name in doc.layouts.names():
             if name == "Model":
                 continue
-            spaces.append((name, doc.layout(name)))
+            try:
+                layout = doc.layouts.get(name)  # safer than doc.layout(name) across ezdxf versions
+            except Exception:
+                layout = None
+            if layout is None:
+                continue
+            spaces.append((name, layout))
     except Exception:
         pass
 
@@ -511,13 +747,22 @@ def main() -> int:
     text_by_space: dict[str, list[TextItem]] = {}
     diagnostics_by_space: dict[str, Any] = {}
     for space_name, space in spaces:
+        if space is None:
+            continue
         items = list(iter_text_items_in_space(space))
         text_by_space[space_name] = items
 
         # Diagnostics: where are key texts globally (helps decide ROI mismatch vs. missing data)
         import re
 
-        re_internal = re.compile(field_defs["internal_code"]["parse"]["pattern"])
+        # internal_code may have multiple compatible patterns
+        if field_defs["internal_code"]["parse"].get("type") == "internal_code_cnpe":
+            pats = field_defs["internal_code"]["parse"].get("patterns") or {}
+            re_internal_full = re.compile(pats.get("full", r"^[A-Z0-9]{7}-[A-Z0-9]{5}-[0-9]{3}$"))
+            re_internal_short = re.compile(pats.get("short", r"^[A-Z0-9]{7}-[A-Z0-9]{5}$"))
+        else:
+            re_internal_full = re.compile(field_defs["internal_code"]["parse"]["pattern"])
+            re_internal_short = re_internal_full
         re_engineering = re.compile(field_defs["engineering_no"]["parse"]["pattern"])
         re_scale = re.compile(field_defs["scale_text"]["parse"]["pattern"])
         re_page = re.compile(field_defs["page_info"]["parse"]["pattern"])
@@ -532,7 +777,7 @@ def main() -> int:
             al = clean_alnum(t.text.upper())
             if len(al) == 19:
                 external19.append({"value": al, "x": t.x, "y": t.y, "src": t.src})
-            if re_internal.search(t.text.strip()):
+            if re_internal_full.search(t.text.strip()) or re_internal_short.search(t.text.strip()):
                 internal.append({"value": t.text.strip(), "x": t.x, "y": t.y, "src": t.src})
             if re_engineering.search(t.text.strip()):
                 engineering.append({"value": t.text.strip(), "x": t.x, "y": t.y, "src": t.src})
@@ -639,7 +884,11 @@ def main() -> int:
         # field extraction
         extracted: dict[str, Any] = {}
         debug_rois: dict[str, Any] = {}
+        revision_ctx: Optional[str] = None
         for var, fd in field_defs.items():
+            # Derived fields (no ROI): postpone to post-pass
+            if fd.get("parse", {}).get("type") == "derived_from_internal_code_album_code":
+                continue
             # system_no removed -> may appear as comment only; skip non-dict
             if not isinstance(fd, dict):
                 continue
@@ -651,13 +900,33 @@ def main() -> int:
                 extracted[var] = {"ok": False, "value": None, "error": f"roi_not_found:{roi_field_name}"}
                 continue
             roi = rect_from_rb_offset(outer=outer, rb_offset=[float(x) for x in rb], sx=sx, sy=sy)
-            roi = expand_rect(roi, base=outer, margin_percent=roi_margin_percent)
-            roi_items = [
-                t
-                for t in texts
-                if roi.contains_point(t.x, t.y) or (t.bbox is not None and roi.intersects(t.bbox))
-            ]
+            # Adjacent revision-table columns (版次/状态/日期) share borders; expanding ROI can cause cross-contamination.
+            effective_margin = 0.0 if var in {"revision", "status", "date"} else roi_margin_percent
+            roi = expand_rect(roi, base=outer, margin_percent=effective_margin)
+            # Important: for revision-table columns and page_info cells, users expect STRICT "in-ROI" behavior.
+            # Using approximate bbox intersection can falsely pull neighbor-column texts due to alignment/width heuristics.
+            point_only_vars = {"revision", "status", "date", "page_info"}
+            if var in point_only_vars:
+                roi_items = [t for t in texts if roi.contains_point(t.x, t.y)]
+            else:
+                roi_items = [t for t in texts if roi.contains_point(t.x, t.y) or (t.bbox is not None and roi.intersects(t.bbox))]
             raw_text = join_text(roi_items, y_tol=y_tol, line_join=line_join)
+
+            # Rule: for revision/date/status columns, user requires picking the top-most (highest y) text in the column.
+            if var in {"revision", "date", "status"}:
+                top, cand_debug = pick_top_text_by_y(roi_items)
+                parsed = {
+                    "ok": bool(top),
+                    "value": top,
+                    "raw": raw_text,
+                    "note": "pick_top_by_y",
+                    "candidates": cand_debug,
+                }
+                extracted[var] = parsed
+                debug_rois[var] = {"roi_field_name": roi_field_name, "roi": roi.__dict__, "raw": raw_text, "count": len(roi_items)}
+                if var == "revision" and top:
+                    revision_ctx = top
+                continue
 
             # Special: external_code is often stored as 19 separate single-char texts in cells.
             if var == "external_code" and fd.get("parse", {}).get("type") == "docno_plus_fixed19":
@@ -677,10 +946,51 @@ def main() -> int:
                     }
                 else:
                     parsed = parse_field(var, raw_text, fd.get("parse", {}))
+            # Special: page_info often only has two variable cells as text; sort by x: left=total, right=index
+            elif var == "page_info" and fd.get("parse", {}).get("type") == "page_info_auto":
+                total_s, idx_s = extract_page_info_two_tokens_by_x(roi_items)
+                if total_s is not None and idx_s is not None:
+                    try:
+                        total_v: Any = int(total_s)
+                    except Exception:
+                        total_v = total_s
+                    try:
+                        idx_v: Any = int(idx_s)
+                    except Exception:
+                        idx_v = idx_s
+                    parsed = {
+                        "ok": True,
+                        "value": f"共{total_s}张 第{idx_s}张",
+                        "raw": raw_text,
+                        "page_total": total_v,
+                        "page_index": idx_v,
+                        "note": "page_info_two_tokens_by_x",
+                    }
+                else:
+                    parsed = parse_field(var, raw_text, fd.get("parse", {}))
             else:
                 parsed = parse_field(var, raw_text, fd.get("parse", {}))
             extracted[var] = parsed
             debug_rois[var] = {"roi_field_name": roi_field_name, "roi": roi.__dict__, "raw": raw_text, "count": len(roi_items)}
+            if var == "revision" and isinstance(parsed, dict):
+                revision_ctx = str(parsed.get("value") or "").strip() or None
+
+        # Post-pass: derive album_code from internal_code (no new ROI)
+        if "album_code" in field_defs:
+            fd = field_defs["album_code"]
+            if fd.get("parse", {}).get("type") == "derived_from_internal_code_album_code":
+                ic = extracted.get("internal_code")
+                if isinstance(ic, dict) and ic.get("ok"):
+                    ac = ic.get("album_code")
+                    ok = bool(ac)
+                    extracted["album_code"] = {
+                        "ok": ok,
+                        "value": ac if ok else None,
+                        "raw": ic.get("raw", ""),
+                        "note": "derived_from_internal_code",
+                    }
+                else:
+                    extracted["album_code"] = {"ok": False, "value": None, "raw": (ic.get("raw") if isinstance(ic, dict) else ""), "error": "missing_internal_code"}
 
         # scale consistency check (geom vs titleblock)
         geom = float(fit["geom_scale_factor"])
@@ -751,10 +1061,27 @@ def main() -> int:
             }
             summary["scale_fit"] = best["fit"]
             summary["scale_consistency"] = best["scale_consistency"]
+            summary["extracted_titleblock"] = {k: v for k, v in best["titleblock"].items()}
             summary["extracted_titleblock_values"] = {
                 k: (v.get("value") if isinstance(v, dict) else None) for k, v in best["titleblock"].items()
             }
         report = summary
+
+    # Defensive: ensure no generators leak into JSON (some ezdxf APIs return generators).
+    import types
+
+    def sanitize_for_json(obj: Any) -> Any:
+        if isinstance(obj, types.GeneratorType):
+            return [sanitize_for_json(x) for x in obj]
+        if isinstance(obj, dict):
+            return {str(k): sanitize_for_json(v) for k, v in obj.items()}
+        if isinstance(obj, (list, tuple)):
+            return [sanitize_for_json(x) for x in obj]
+        if isinstance(obj, (Rect, TextItem)):
+            return sanitize_for_json(obj.__dict__)
+        return obj
+
+    report = sanitize_for_json(report)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

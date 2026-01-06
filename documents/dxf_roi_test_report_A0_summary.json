@@ -39,17 +39,18 @@
   },
   "extracted_titleblock_values": {
     "external_code": "JD1NH120001B25C42SD",
-    "internal_code": null,
+    "internal_code": "20161NH-JGS01",
     "engineering_no": "2016",
     "subitem_no": "NH",
     "paper_size_text": "A0",
     "discipline": "结构",
     "scale_text": "1:100",
-    "page_info": null,
+    "page_info": "共1张 第X张",
     "title_cn": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
-    "revision": "A",
-    "status": "2025.12 CFC",
-    "date": "A 2025.12 CFC"
+    "revision": "B",
+    "status": "CFC",
+    "date": "2026.01",
+    "album_code": "01"
   },
   "scale_fit": {
     "paper_variant_id": "CNPE_A0H",
@@ -67,5 +68,242 @@
     "flags_added": [
       "比例不一致"
     ]
+  },
+  "extracted_titleblock": {
+    "external_code": {
+      "ok": true,
+      "value": "JD1NH120001B25C42SD",
+      "raw": "D\nJ 1 N H 1 2 0 0 0 1 B 2 5 C 4 2 D\nS\nDOC.NO",
+      "note": "rebuilt_from_single_chars",
+      "rebuilt_tokens_debug": [
+        {
+          "ch": "J",
+          "x": 56032.347588310804,
+          "y": 575457.7260689716,
+          "src": "space:virtual:virtual:MTEXT"
+        },
+        {
+          "ch": "D",
+          "x": 56470.84676766218,
+          "y": 575465.5518619693,
+          "src": "space:virtual:virtual:MTEXT"
+        },
+        {
+          "ch": "1",
+          "x": 56932.34761795023,
+          "y": 575457.7260689716,
+          "src": "space:virtual:virtual:MTEXT"
+        },
+        {
+          "ch": "N",
+          "x": 57263.370936415355,
+          "y": 575457.7260601554,
+          "src": "space:virtual:virtual:MTEXT"
+        },
+        {
+          "ch": "H",
+          "x": 57732.34761795023,
+          "y": 575457.7260601554,
+          "src": "space:virtual:virtual:MTEXT"
+        },
+        {
+          "ch": "1",
+          "x": 58132.34761795023,
+          "y": 575457.7260689716,
+          "src": "space:virtual:virtual:MTEXT"
+        },
+        {
+          "ch": "2",
+          "x": 58532.34761795023,
+          "y": 575457.7260689716,
+          "src": "space:virtual:virtual:MTEXT"
+        },
+        {
+          "ch": "0",
+          "x": 58932.34761795023,
+          "y": 575457.7260689716,
+          "src": "space:virtual:virtual:MTEXT"
+        },
+        {
+          "ch": "0",
+          "x": 59332.34761795023,
+          "y": 575457.7260689716,
+          "src": "space:virtual:virtual:MTEXT"
+        },
+        {
+          "ch": "0",
+          "x": 59732.34761795023,
+          "y": 575457.7260689716,
+          "src": "space:virtual:virtual:MTEXT"
+        },
+        {
+          "ch": "1",
+          "x": 60132.34761795023,
+          "y": 575457.7260689716,
+          "src": "space:virtual:virtual:MTEXT"
+        },
+        {
+          "ch": "B",
+          "x": 60532.34761795023,
+          "y": 575457.7260689716,
+          "src": "space:virtual:virtual:MTEXT"
+        },
+        {
+          "ch": "2",
+          "x": 60932.34761795023,
+          "y": 575457.7260689716,
+          "src": "space:virtual:virtual:MTEXT"
+        },
+        {
+          "ch": "5",
+          "x": 61332.34761795023,
+          "y": 575457.7260689716,
+          "src": "space:virtual:virtual:MTEXT"
+        },
+        {
+          "ch": "C",
+          "x": 61732.34761795023,
+          "y": 575457.7260689716,
+          "src": "space:virtual:virtual:MTEXT"
+        },
+        {
+          "ch": "4",
+          "x": 62132.34761795023,
+          "y": 575457.7260689716,
+          "src": "space:virtual:virtual:MTEXT"
+        },
+        {
+          "ch": "2",
+          "x": 62606.845691332855,
+          "y": 575457.7260689716,
+          "src": "space:virtual:virtual:MTEXT"
+        },
+        {
+          "ch": "S",
+          "x": 63116.91805450308,
+          "y": 575454.7183047838,
+          "src": "space:virtual:virtual:MTEXT"
+        },
+        {
+          "ch": "D",
+          "x": 63629.25037552321,
+          "y": 575457.7260689716,
+          "src": "space:virtual:virtual:MTEXT"
+        }
+      ]
+    },
+    "internal_code": {
+      "ok": true,
+      "value": "20161NH-JGS01",
+      "raw": "20161NH-JGS01",
+      "variant": "short",
+      "internal_code_base": "20161NH-JGS01",
+      "album_code": "01"
+    },
+    "engineering_no": {
+      "ok": true,
+      "value": "2016",
+      "raw": "2016"
+    },
+    "subitem_no": {
+      "ok": true,
+      "value": "NH",
+      "raw": "NH"
+    },
+    "paper_size_text": {
+      "ok": true,
+      "value": "A0",
+      "raw": "A0"
+    },
+    "discipline": {
+      "ok": true,
+      "value": "结构",
+      "raw": "结构"
+    },
+    "scale_text": {
+      "ok": true,
+      "value": "1:100",
+      "raw": "1:100",
+      "scale_denominator": 100
+    },
+    "page_info": {
+      "ok": true,
+      "value": "共1张 第X张",
+      "raw": "1\nX",
+      "page_total": 1,
+      "page_index": "X",
+      "note": "page_info_two_tokens_by_x"
+    },
+    "title_cn": {
+      "ok": true,
+      "value": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
+      "raw": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles."
+    },
+    "revision": {
+      "ok": true,
+      "value": "B",
+      "raw": "B\nA",
+      "note": "pick_top_by_y",
+      "candidates": [
+        {
+          "text": "B",
+          "x": 55155.08991716157,
+          "y": 577375.4031279273,
+          "src": "space:MTEXT"
+        },
+        {
+          "text": "A",
+          "x": 55141.1224905744,
+          "y": 577060.249763926,
+          "src": "space:virtual:virtual:MTEXT"
+        }
+      ]
+    },
+    "status": {
+      "ok": true,
+      "value": "CFC",
+      "raw": "CFC\nCFC",
+      "note": "pick_top_by_y",
+      "candidates": [
+        {
+          "text": "CFC",
+          "x": 56799.76279437084,
+          "y": 577375.4031279273,
+          "src": "space:MTEXT"
+        },
+        {
+          "text": "CFC",
+          "x": 56785.6493768035,
+          "y": 577060.249763926,
+          "src": "space:virtual:virtual:MTEXT"
+        }
+      ]
+    },
+    "date": {
+      "ok": true,
+      "value": "2026.01",
+      "raw": "2026.01\n2025.12",
+      "note": "pick_top_by_y",
+      "candidates": [
+        {
+          "text": "2026.01",
+          "x": 55914.16891652167,
+          "y": 577375.4031279273,
+          "src": "space:MTEXT"
+        },
+        {
+          "text": "2025.12",
+          "x": 55934.70975786803,
+          "y": 577060.249763926,
+          "src": "space:virtual:virtual:MTEXT"
+        }
+      ]
+    },
+    "album_code": {
+      "ok": true,
+      "value": "01",
+      "raw": "20161NH-JGS01",
+      "note": "derived_from_internal_code"
+    }
   }
 }

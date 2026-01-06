@@ -34,7 +34,14 @@
         }
       ],
       "external19_candidates_top20": [],
-      "internal_code_candidates_top20": [],
+      "internal_code_candidates_top20": [
+        {
+          "value": "20161NH-JGS01",
+          "x": 62741.33008619655,
+          "y": 573359.1931406627,
+          "src": "space:virtual:virtual:MTEXT"
+        }
+      ],
       "engineering_no_candidates_top20": [
         {
           "value": "2016",
@@ -108,7 +115,7 @@
             "xmax": 64384.44132180835,
             "ymax": 613056.068659064
           },
-          "items_count": 94,
+          "items_count": 95,
           "has_combo": true,
           "company_count": 2,
           "cnpe_count": 4
@@ -252,10 +259,12 @@
           ]
         },
         "internal_code": {
-          "ok": false,
-          "value": null,
+          "ok": true,
+          "value": "20161NH-JGS01",
           "raw": "20161NH-JGS01",
-          "error": "regex_no_match"
+          "variant": "short",
+          "internal_code_base": "20161NH-JGS01",
+          "album_code": "01"
         },
         "engineering_no": {
           "ok": true,
@@ -284,10 +293,12 @@
           "scale_denominator": 100
         },
         "page_info": {
-          "ok": false,
-          "value": null,
+          "ok": true,
+          "value": "共1张 第X张",
           "raw": "1\nX",
-          "error": "regex_no_match"
+          "page_total": 1,
+          "page_index": "X",
+          "note": "page_info_two_tokens_by_x"
         },
         "title_cn": {
           "ok": true,
@@ -296,18 +307,69 @@
         },
         "revision": {
           "ok": true,
-          "value": "A",
-          "raw": "B\nA"
+          "value": "B",
+          "raw": "B\nA",
+          "note": "pick_top_by_y",
+          "candidates": [
+            {
+              "text": "B",
+              "x": 55155.08991716157,
+              "y": 577375.4031279273,
+              "src": "space:MTEXT"
+            },
+            {
+              "text": "A",
+              "x": 55141.1224905744,
+              "y": 577060.249763926,
+              "src": "space:virtual:virtual:MTEXT"
+            }
+          ]
         },
         "status": {
           "ok": true,
-          "value": "2025.12 CFC",
-          "raw": "CFC\n2025.12 CFC"
+          "value": "CFC",
+          "raw": "CFC\nCFC",
+          "note": "pick_top_by_y",
+          "candidates": [
+            {
+              "text": "CFC",
+              "x": 56799.76279437084,
+              "y": 577375.4031279273,
+              "src": "space:MTEXT"
+            },
+            {
+              "text": "CFC",
+              "x": 56785.6493768035,
+              "y": 577060.249763926,
+              "src": "space:virtual:virtual:MTEXT"
+            }
+          ]
         },
         "date": {
           "ok": true,
-          "value": "A 2025.12 CFC",
-          "raw": "2026.01\nA 2025.12 CFC"
+          "value": "2026.01",
+          "raw": "2026.01\n2025.12",
+          "note": "pick_top_by_y",
+          "candidates": [
+            {
+              "text": "2026.01",
+              "x": 55914.16891652167,
+              "y": 577375.4031279273,
+              "src": "space:MTEXT"
+            },
+            {
+              "text": "2025.12",
+              "x": 55934.70975786803,
+              "y": 577060.249763926,
+              "src": "space:virtual:virtual:MTEXT"
+            }
+          ]
+        },
+        "album_code": {
+          "ok": true,
+          "value": "01",
+          "raw": "20161NH-JGS01",
+          "note": "derived_from_internal_code"
         }
       },
       "debug_rois": {
@@ -413,10 +475,10 @@
         "revision": {
           "roi_field_name": "版次",
           "roi": {
-            "xmin": 54872.6393218463,
-            "ymin": 576882.3066592086,
-            "xmax": 55486.343321843844,
-            "ymax": 578117.9306592037
+            "xmin": 54884.44132184625,
+            "ymin": 576906.0686592085,
+            "xmax": 55474.54132184389,
+            "ymax": 578094.1686592038
           },
           "raw": "B\nA",
           "count": 2
@@ -424,24 +486,24 @@
         "status": {
           "roi_field_name": "状态",
           "roi": {
-            "xmin": 56358.54132184037,
-            "ymin": 576882.3066592086,
-            "xmax": 57190.541321837045,
-            "ymax": 578117.9306592037
+            "xmin": 56374.541321840305,
+            "ymin": 576906.0686592085,
+            "xmax": 57174.54132183711,
+            "ymax": 578094.1686592038
           },
-          "raw": "CFC\n2025.12 CFC",
-          "count": 3
+          "raw": "CFC\nCFC",
+          "count": 2
         },
         "date": {
           "roi_field_name": "日期",
           "roi": {
-            "xmin": 55456.541321843964,
-            "ymin": 576882.3066592086,
-            "xmax": 56392.54132184023,
-            "ymax": 578117.9306592037
+            "xmin": 55474.54132184389,
+            "ymin": 576906.0686592085,
+            "xmax": 56374.541321840305,
+            "ymax": 578094.1686592038
           },
-          "raw": "2026.01\nA 2025.12 CFC",
-          "count": 4
+          "raw": "2026.01\n2025.12",
+          "count": 2
         }
       },
       "scale_consistency": {
@@ -501,35 +563,35 @@
             "xmax": 63569.88253291346,
             "ymax": 574840.8320361491
           },
-          "text": "reproduced by any means ,\nThis document is the property of China Nuclear Power Engineering CO.,LTD (CNPE) , no part of this document may be\nnor transmitted without the written permission of CNPE .",
+          "text": "reproduced by any means ,\nThis document is the property of China Nuclear Power Engineering CO.,LTD (CNPE) , no part of this document may be\nnor transmitted without the written permission of CNPE .\n中 国 核 电 工 程 有 限 公 司\nCNPE",
           "hit": true,
-          "count": 3
+          "count": 5
         }
       ],
       "titleblock": {
         "external_code": {
           "ok": false,
           "value": null,
-          "raw": "浙 江 金 七 门 核 电 厂 1、2 号 机 组",
+          "raw": "浙 江 金 七 门 核 电 厂 1、2 号 机 组\nDOC.NO",
           "error": "fixed_len_19_not_found",
-          "clean": "12"
+          "clean": "12DOCNO"
         },
         "internal_code": {
           "ok": false,
           "value": null,
-          "raw": "CNPE",
-          "error": "regex_no_match"
+          "raw": "CNPE\nChina Nuclear Power Engineering Co., Ltd",
+          "error": "internal_code_no_match"
         },
         "engineering_no": {
           "ok": false,
           "value": null,
-          "raw": "",
+          "raw": "中 国 核 电 工 程 有 限 公 司\nChina Nuclear Power Engineering Co., Ltd",
           "error": "regex_no_match"
         },
         "subitem_no": {
           "ok": true,
-          "value": "",
-          "raw": ""
+          "value": "China Nuclear Power Engineering Co., Ltd",
+          "raw": "China Nuclear Power Engineering Co., Ltd"
         },
         "paper_size_text": {
           "ok": true,
@@ -550,8 +612,8 @@
         "page_info": {
           "ok": false,
           "value": null,
-          "raw": "1:100",
-          "error": "regex_no_match"
+          "raw": "",
+          "error": "page_info_no_match"
         },
         "title_cn": {
           "ok": true,
@@ -561,17 +623,50 @@
         "revision": {
           "ok": true,
           "value": "B",
-          "raw": "B"
+          "raw": "B",
+          "note": "pick_top_by_y",
+          "candidates": [
+            {
+              "text": "B",
+              "x": 55155.08991716157,
+              "y": 577375.4031279273,
+              "src": "space:MTEXT"
+            }
+          ]
         },
         "status": {
           "ok": true,
           "value": "CFC",
-          "raw": "CFC"
+          "raw": "CFC",
+          "note": "pick_top_by_y",
+          "candidates": [
+            {
+              "text": "CFC",
+              "x": 56799.76279437084,
+              "y": 577375.4031279273,
+              "src": "space:MTEXT"
+            }
+          ]
         },
         "date": {
           "ok": true,
-          "value": "B 2026.01",
-          "raw": "B 2026.01"
+          "value": "2026.01",
+          "raw": "2026.01",
+          "note": "pick_top_by_y",
+          "candidates": [
+            {
+              "text": "2026.01",
+              "x": 55914.16891652167,
+              "y": 577375.4031279273,
+              "src": "space:MTEXT"
+            }
+          ]
+        },
+        "album_code": {
+          "ok": false,
+          "value": null,
+          "raw": "CNPE\nChina Nuclear Power Engineering Co., Ltd",
+          "error": "missing_internal_code"
         }
       },
       "debug_rois": {
@@ -583,8 +678,8 @@
             "xmax": 63560.27462038196,
             "ymax": 576104.0591467266
           },
-          "raw": "浙 江 金 七 门 核 电 厂 1、2 号 机 组",
-          "count": 1
+          "raw": "浙 江 金 七 门 核 电 厂 1、2 号 机 组\nDOC.NO",
+          "count": 2
         },
         "internal_code": {
           "roi_field_name": "内部编码",
@@ -594,8 +689,8 @@
             "xmax": 63435.95405520164,
             "ymax": 574053.9996937028
           },
-          "raw": "CNPE",
-          "count": 1
+          "raw": "CNPE\nChina Nuclear Power Engineering Co., Ltd",
+          "count": 2
         },
         "engineering_no": {
           "roi_field_name": "工程号",
@@ -605,8 +700,8 @@
             "xmax": 59241.469412661754,
             "ymax": 574053.9996937028
           },
-          "raw": "",
-          "count": 0
+          "raw": "中 国 核 电 工 程 有 限 公 司\nChina Nuclear Power Engineering Co., Ltd",
+          "count": 2
         },
         "subitem_no": {
           "roi_field_name": "子项号",
@@ -616,8 +711,8 @@
             "xmax": 60794.26335714667,
             "ymax": 574053.9996937028
           },
-          "raw": "",
-          "count": 0
+          "raw": "China Nuclear Power Engineering Co., Ltd",
+          "count": 1
         },
         "paper_size_text": {
           "roi_field_name": "图幅",
@@ -660,8 +755,8 @@
             "xmax": 63422.3671081874,
             "ymax": 572392.4753179663
           },
-          "raw": "1:100",
-          "count": 1
+          "raw": "",
+          "count": 0
         },
         "title_cn": {
           "roi_field_name": "图纸标题",
@@ -677,10 +772,10 @@
         "revision": {
           "roi_field_name": "版次",
           "roi": {
-            "xmin": 54649.27348009823,
-            "ymin": 577242.5625926199,
-            "xmax": 55244.87088941459,
-            "ymax": 578448.8019552785
+            "xmin": 54660.72727643124,
+            "ymin": 577265.7595034402,
+            "xmax": 55233.41709308158,
+            "ymax": 578425.6050444582
           },
           "raw": "B",
           "count": 1
@@ -688,10 +783,10 @@
         "status": {
           "roi_field_name": "状态",
           "roi": {
-            "xmin": 56091.335747409496,
-            "ymin": 577242.5625926199,
-            "xmax": 56898.78859854166,
-            "ymax": 578448.8019552785
+            "xmin": 56106.86368685435,
+            "ymin": 577265.7595034402,
+            "xmax": 56883.260659096806,
+            "ymax": 578425.6050444582
           },
           "raw": "CFC",
           "count": 1
@@ -699,13 +794,13 @@
         "date": {
           "roi_field_name": "日期",
           "roi": {
-            "xmin": 55215.94816120613,
-            "ymin": 577242.5625926199,
-            "xmax": 56124.3326187298,
-            "ymax": 578448.8019552785
+            "xmin": 55233.41709308158,
+            "ymin": 577265.7595034402,
+            "xmax": 56106.86368685435,
+            "ymax": 578425.6050444582
           },
-          "raw": "B 2026.01",
-          "count": 2
+          "raw": "2026.01",
+          "count": 1
         }
       },
       "scale_consistency": {

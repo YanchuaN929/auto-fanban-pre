@@ -268,6 +268,11 @@ sections:
             required: true
             source: "CNPE.field_definitions.internal_code"
             description: "内部编码：XXXXXXX-XXXXX-XXX，XXX 从 001 起"
+          album_code:
+            type: "str"
+            required: false
+            source: "CNPE.field_definitions.album_code"
+            description: "图册编号：从内部编码的“中间5位”的末2位提炼（不新增ROI）。对两种 internal_code 格式都生效：XXXXXXX-XXXXX-XXX 与 XXXXXXX-XXXXX；要求末2位为数字。例如 20161NH-JGS01 -> album_code=01"
           external_code:
             type: "str"
             required: true
@@ -699,8 +704,19 @@ sections:
         purpose: 图纸内部编码（专用ROI框内读取全部文本）
         extract_roi_field_name: 内部编码
         parse:
-          type: regex
-          pattern: ^[A-Z0-9]{7}-[A-Z0-9]{5}-[0-9]{3}$
+          # 兼容两种格式：
+          # - 标准：XXXXXXX-XXXXX-XXX（XXX 从 001 起）
+          # - 兼容：XXXXXXX-XXXXX（常见于样例：20161NH-JGS01；其中末2位数字可提炼为图册编号 album_code=01）
+          type: internal_code_cnpe
+          patterns:
+            full: ^(?P<prefix>[A-Z0-9]{7})-(?P<mid>[A-Z0-9]{5})-(?P<seq>[0-9]{3})$
+            short: ^(?P<prefix>[A-Z0-9]{7})-(?P<mid>[A-Z0-9]{5})$
+            mid_album: ^(?P<mid3>[A-Z0-9]{3})(?P<album>[0-9]{2})$
+      album_code:
+        purpose: 图册编号（从 internal_code 派生，不新增ROI）
+        derive_from: internal_code
+        parse:
+          type: derived_from_internal_code_album_code
       engineering_no:
         purpose: 工程号（4位数字；与前端 project_no 概念区分，但默认值可能相同）
         extract_roi_field_name: 工程号
@@ -736,8 +752,12 @@ sections:
         purpose: 张数信息（共N张 第M张）
         extract_roi_field_name: 张数
         parse:
-          type: regex
-          pattern: 共\s*(\d+)\s*张.*第\s*(\d+)\s*张
+          # 说明：很多DXF把“共/张/第/张”画成静态线框或不可提取的字形，ROI 内可提取的往往只有两个“变量格”：
+          # - 共N张 -> N
+          # - 第M张 -> M（可能为数字或 X）
+          # 因此采用“auto”解析：优先匹配完整短语（如果短语文本可提取），否则退化为两token解析。
+          type: page_info_auto
+          pattern: 共\s*(\d+)\s*张.*第\s*([0-9Xx]+)\s*张
           output:
             page_total: 1
             page_index: 2
@@ -747,20 +767,27 @@ sections:
         parse:
           type: text_multiline
       revision:
-        purpose: 版次（取同列最新非空）
+        purpose: 版次（修订表“版次/日期/状态”三列之一）
         extract_roi_field_name: 版次
         parse:
-          type: latest_nonempty_in_column
+          type: pick_top_by_y
+        note:
+          - "本项目约定：修订表三列（版次/日期/状态）在DXF中是独立文本实体；提取时只按文本插入点(x,y)是否落在ROI内判定命中（不使用bbox相交的近似命中，避免跨列误带入）。"
+          - "列内可能存在多行（例如A行/B行）；最终取值规则为：选择该列ROI内 y 值最大的文本（最靠上/最高行）。"
       status:
-        purpose: 状态（取同列最新非空）
+        purpose: 状态（修订表“版次/日期/状态”三列之一）
         extract_roi_field_name: 状态
         parse:
-          type: latest_nonempty_in_column
+          type: pick_top_by_y
+        note:
+          - "命中判定与取值规则同 revision：point-only 命中；列内取 y 最大的文本作为最终状态。"
       date:
-        purpose: 日期（当前阶段可不参与业务逻辑，但保留）
+        purpose: 日期（修订表“版次/日期/状态”三列之一；当前阶段可不参与业务逻辑，但保留）
         extract_roi_field_name: 日期
         parse:
-          type: latest_nonempty_in_column_or_text
+          type: pick_top_by_y
+        note:
+          - "命中判定与取值规则同 revision：point-only 命中；列内取 y 最大的日期文本作为最终日期。"
     tolerance:
       roi_margin_percent: 0.020
       text_grouping:
