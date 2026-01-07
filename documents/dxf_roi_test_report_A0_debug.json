@@ -302,8 +302,23 @@
         },
         "title_cn": {
           "ok": true,
-          "value": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
-          "raw": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles."
+          "value": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行",
+          "raw": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
+          "note": "title_bilingual_split",
+          "cn_lines": [
+            "有可能被打在块内",
+            "这里是图纸标题，这里有可能是一个文本框输入完成",
+            "也有可能是这样分列两行"
+          ]
+        },
+        "title_en": {
+          "ok": true,
+          "value": "For Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
+          "raw": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
+          "note": "title_bilingual_split",
+          "en_lines": [
+            "For Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles."
+          ]
         },
         "revision": {
           "ok": true,
@@ -472,6 +487,17 @@
           "raw": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
           "count": 4
         },
+        "title_en": {
+          "roi_field_name": "图纸标题",
+          "roi": {
+            "xmin": 57894.44132183424,
+            "ymin": 571474.0686592303,
+            "xmax": 62574.441321815575,
+            "ymax": 573138.0686592236
+          },
+          "raw": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
+          "count": 4
+        },
         "revision": {
           "roi_field_name": "版次",
           "roi": {
@@ -617,8 +643,24 @@
         },
         "title_cn": {
           "ok": true,
-          "value": "2016 NH\n有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
-          "raw": "2016 NH\n有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles."
+          "value": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行",
+          "raw": "2016 NH\n有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
+          "note": "title_bilingual_split",
+          "cn_lines": [
+            "有可能被打在块内",
+            "这里是图纸标题，这里有可能是一个文本框输入完成",
+            "也有可能是这样分列两行"
+          ]
+        },
+        "title_en": {
+          "ok": true,
+          "value": "2016 NH\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
+          "raw": "2016 NH\n有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
+          "note": "title_bilingual_split",
+          "en_lines": [
+            "2016 NH",
+            "For Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles."
+          ]
         },
         "revision": {
           "ok": true,
@@ -759,6 +801,17 @@
           "count": 0
         },
         "title_cn": {
+          "roi_field_name": "图纸标题",
+          "roi": {
+            "xmin": 57581.92088449349,
+            "ymin": 571962.9390516185,
+            "xmax": 62123.84317211188,
+            "ymax": 573587.3671134431
+          },
+          "raw": "2016 NH\n有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
+          "count": 6
+        },
+        "title_en": {
           "roi_field_name": "图纸标题",
           "roi": {
             "xmin": 57581.92088449349,

@@ -383,6 +383,72 @@ def pick_top_text_by_y(roi_items: list[TextItem], *, max_candidates: int = 20) -
     return None, debug
 
 
+def has_cjk(s: str) -> bool:
+    for ch in s:
+        o = ord(ch)
+        if 0x4E00 <= o <= 0x9FFF:
+            return True
+    return False
+
+
+def extract_text_lines_for_title(roi_items: list[TextItem], *, y_tol: float) -> list[str]:
+    """
+    Build "text lines" from ROI items:
+    - Treat each TEXT/ATTRIB as one line fragment.
+    - Treat MTEXT as one or multiple line fragments split by '\\n'.
+    - Cluster fragments by y, then within each line sort by x and join with spaces.
+    """
+    frags: list[tuple[float, float, str]] = []
+    for it in roi_items:
+        t = (it.text or "").strip()
+        if not t:
+            continue
+        parts = [p.strip() for p in t.splitlines() if p.strip()]
+        if not parts:
+            continue
+        if len(parts) == 1:
+            frags.append((it.y, it.x, parts[0]))
+        else:
+            # Preserve internal order top->bottom within one MTEXT by nudging y slightly
+            for idx, p in enumerate(parts):
+                frags.append((it.y - idx * (y_tol * 0.1), it.x, p))
+
+    frags.sort(key=lambda t: (-t[0], t[1]))
+    lines: list[list[tuple[float, float, str]]] = []
+    for y, x, s in frags:
+        placed = False
+        for line in lines:
+            if abs(line[0][0] - y) <= y_tol:
+                line.append((y, x, s))
+                placed = True
+                break
+        if not placed:
+            lines.append([(y, x, s)])
+
+    out: list[str] = []
+    for line in lines:
+        line.sort(key=lambda t: t[1])
+        s = " ".join(t[2] for t in line if t[2])
+        s = " ".join(s.split())
+        if s:
+            out.append(s)
+    return out
+
+
+def split_title_cn_en(lines: list[str]) -> tuple[str, str, list[str], list[str]]:
+    cn_lines: list[str] = []
+    en_lines: list[str] = []
+    for ln in lines:
+        if has_cjk(ln):
+            cn_lines.append(ln)
+        else:
+            # treat pure ascii/digits/symbol lines as english candidate
+            en_lines.append(ln)
+    title_cn = "\n".join(cn_lines).strip()
+    title_en = "\n".join(en_lines).strip()
+    return title_cn, title_en, cn_lines, en_lines
+
+
 def rect_from_rb_offset(
     *,
     outer: Rect,
@@ -911,6 +977,30 @@ def main() -> int:
             else:
                 roi_items = [t for t in texts if roi.contains_point(t.x, t.y) or (t.bbox is not None and roi.intersects(t.bbox))]
             raw_text = join_text(roi_items, y_tol=y_tol, line_join=line_join)
+
+            # Title bilingual split: compute title_cn + title_en from the same ROI, no extra ROI.
+            if fd.get("parse", {}).get("type") == "title_bilingual_split":
+                if "title_cn" not in extracted or "title_en" not in extracted:
+                    lines = extract_text_lines_for_title(roi_items, y_tol=y_tol)
+                    cn, en, cn_lines, en_lines = split_title_cn_en(lines)
+                    extracted["title_cn"] = {
+                        "ok": bool(cn),
+                        "value": cn if cn else None,
+                        "raw": "\n".join(lines),
+                        "note": "title_bilingual_split",
+                        "cn_lines": cn_lines,
+                    }
+                    extracted["title_en"] = {
+                        "ok": bool(en),
+                        "value": en if en else None,
+                        "raw": "\n".join(lines),
+                        "note": "title_bilingual_split",
+                        "en_lines": en_lines,
+                    }
+                    # record ROI debug once
+                    debug_rois["title_cn"] = {"roi_field_name": roi_field_name, "roi": roi.__dict__, "raw": "\n".join(lines), "count": len(roi_items)}
+                    debug_rois["title_en"] = {"roi_field_name": roi_field_name, "roi": roi.__dict__, "raw": "\n".join(lines), "count": len(roi_items)}
+                continue
 
             # Rule: for revision/date/status columns, user requires picking the top-most (highest y) text in the column.
             if var in {"revision", "date", "status"}:

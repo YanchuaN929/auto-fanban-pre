@@ -117,7 +117,8 @@ sections:
             type: "str"
             required: false
             source: "frontend"
-            description: "封面批准人（是否写入模板需最终确认）"
+            deprecated: true
+            description: "封面批准人：已确认取消，不读取也不编辑（保留字段仅为兼容旧表单）"
           engineering_no:
             type: "str"
             required: true
@@ -153,8 +154,24 @@ sections:
           design_phase:
             type: "str"
             required: true
-            source: "derived:doc_status"
-            description: "设计阶段：你确认=状态（直接复用 doc_status）"
+            source: "derived:status_to_design_phase"
+            description: "设计阶段：从图签状态派生；当 status=CFC 时，design_phase 固定为“施工图设计”（与设计文件中的 design_phase 一致）"
+          album_internal_code:
+            type: "str"
+            required: true
+            source: "derived:internal_code_base_001"
+            description: "图册编号（内部编码前缀）：取 001 图纸 internal_code 的前缀 XXXXXXX-XXXXX（不新增ROI）；用于封面 N3（合并 N3:S3）"
+          album_code:
+            type: "str"
+            required: true
+            source: "derived:album_code_001"
+            description: "图册编号（末2位数字）：从内部编码中间5位末2位提取（不新增ROI）；用于封面 I25（合并 I25:S25）"
+          cover_revision:
+            type: "str"
+            required: false
+            default: "A"
+            source: "frontend"
+            description: "封面版次：前端输入（默认A），写入封面 N5（模板已有“版次：”，在后面追加）；与图签 revision 区分"
           discipline:
             type: "str"
             required: true
@@ -168,9 +185,78 @@ sections:
 
           album_title:
             type: "str"
+            required: false
+            source: "frontend"
+            deprecated: true
+            description: "已废弃：旧字段。请使用 album_title_cn/album_title_en（前端输入）"
+          album_title_cn:
+            type: "str"
             required: true
-            source: "tbd"
-            description: "图册名称：需明确从图签哪个字段提取或由规则拼接"
+            source: "frontend"
+            description: "图册/文件名称（中文）：前端输入。通用封面与1818封面均写入I21(+I22联动分割)。也用于派生 cover_title_cn/catalog_title_cn。"
+          album_title_en:
+            type: "str"
+            required_when: "project_no == '1818'"
+            source: "frontend"
+            description: "图册/文件名称（英文）：仅1818需要前端输入。写入1818封面I23(+I24联动分割)。也用于派生 cover_title_en/catalog_title_en。"
+          cover_title_cn:
+            type: "str"
+            required: true
+            source: "derived:cover_title_cn"
+            description: "封面条目名称（中文）：album_title_cn + '封面'"
+          catalog_title_cn:
+            type: "str"
+            required: true
+            source: "derived:catalog_title_cn"
+            description: "目录条目名称（中文）：album_title_cn + '目录'"
+          cover_title_en:
+            type: "str"
+            required_when: "project_no == '1818'"
+            source: "derived:cover_title_en"
+            description: "封面条目名称（英文，仅1818）：album_title_en + ' Cover'"
+          catalog_title_en:
+            type: "str"
+            required_when: "project_no == '1818'"
+            source: "derived:catalog_title_en"
+            description: "目录条目名称（英文，仅1818）：album_title_en + ' Contents'（如需更正式可改 ' Table of Contents'）"
+
+          cover_paper_size_text:
+            type: "str"
+            required: true
+            source: "derived:cover_paper_size_text"
+            description: "封面文件图幅：固定为'A4文件'"
+          cover_page_total:
+            type: "int"
+            required: true
+            source: "derived:cover_page_total"
+            description: "封面文件页数：固定为1"
+          catalog_paper_size_text:
+            type: "str"
+            required: true
+            source: "derived:catalog_paper_size_text"
+            description: "目录文件图幅：固定为'A4文件'"
+          catalog_page_total:
+            type: "int"
+            required: true
+            source: "derived:catalog_page_total_from_pdf"
+            description: "目录文件页数：按A4横向分页后导出PDF计页得到（见 template_bindings.catalog_common.* 的分页说明）"
+
+          upgrade_start_seq:
+            type: "int"
+            required: false
+            source: "frontend"
+            description: "升版范围起始尾号（XXX）：例如 5 表示 005"
+          upgrade_end_seq:
+            type: "int"
+            required: false
+            source: "frontend"
+            description: "升版范围结束尾号（XXX）：例如 12 表示 012"
+          upgrade_note_text:
+            type: "str"
+            required: false
+            default: "升版"
+            source: "frontend"
+            description: "升版标记写入文本：用于目录明细I列"
           album_seq:
             type: "str"
             required: true
@@ -335,6 +421,42 @@ sections:
           location: "row=29, col=B..T (19 cells)"
           value_from: "GlobalDocParams.cover_external_code"
           note: "你已说明：第29行B列起连续19格用于输入19位外部编码"
+        album_internal_code_merge_N3_S3:
+          template: "documents_bin/封面模板文件*.docx (embedded Excel)"
+          location: "N3:S3 (merged)"
+          value_from: "GlobalDocParams.album_internal_code"
+          note: "合并单元格写入规则：写入合并区左上角单元格即可（Excel仅存储左上角值）"
+        album_code_digits_merge_I25_S25:
+          template: "documents_bin/封面模板文件*.docx (embedded Excel)"
+          location: "I25:S25 (merged)"
+          value_from: "GlobalDocParams.album_code"
+        cover_revision_merge_N5_P5_append:
+          template: "documents_bin/封面模板文件*.docx (embedded Excel)"
+          location: "N5:P5 (merged)"
+          value_from: "GlobalDocParams.cover_revision"
+          write_mode: "append_after_existing_label"
+          note: "模板N5已有“版次：”，运行时读取原值并在其后追加 cover_revision；不影响图签 revision 字段"
+        album_title_cn_split_I21_I22:
+          template: "documents_bin/封面模板文件*.docx (embedded Excel)"
+          location: "I21 + I22"
+          value_from: "GlobalDocParams.album_title_cn"
+          write_mode: "split_into_two_cells"
+          split_rule: "cn_split_prefer_right_is_cjk_near_half"
+          note: "I21/I22联动写入：为控制每格字数不溢出，将字符串尽量对半分；分割点必须满足“右侧字符为中文(CJK)”，允许左侧为非中文且右侧为中文；禁止在纯英文/数字/符号序列中间分割。"
+      cover_1818:
+        album_title_cn_split_I21_I22:
+          template: "documents_bin/1818图册封面模板.docx (embedded Excel)"
+          location: "I21 + I22"
+          value_from: "GlobalDocParams.album_title_cn"
+          write_mode: "split_into_two_cells"
+          split_rule: "cn_split_prefer_right_is_cjk_near_half"
+        album_title_en_split_I23_I24:
+          template: "documents_bin/1818图册封面模板.docx (embedded Excel)"
+          location: "I23 + I24"
+          value_from: "GlobalDocParams.album_title_en"
+          write_mode: "split_into_two_cells"
+          split_rule: "en_split_on_whitespace_between_words_near_half"
+          note: "I23/I24联动写入：英文仅允许在完整英文单词之间（空白处）分割；优先选择分割后右侧以字母开头的单词。示例：'...~-8.800m secongdary steel shop drawings' -> I23='...~-8.800m'，I24='secongdary steel shop drawings'"
       catalog_common:
         header_internal_code_tm:
           template: "documents_bin/目录模板文件.xlsx"
@@ -346,6 +468,28 @@ sections:
           sheet: "Sheet1"
           cell: "H3"
           value_from: "GlobalDocParams.catalog_external_code"
+        detail_note_col_I:
+          template: "documents_bin/目录模板文件.xlsx"
+          sheet: "Sheet1"
+          column: "I"
+          start_row: 9
+          value_from: "derived:catalog_detail_note_by_upgrade_range"
+          note: "目录明细I列：仅对图纸行(001~XXX)生效；若internal_code尾号XXX落在前端升版范围[start_seq,end_seq]内，则写入 upgrade_note_text(默认'升版')，否则留空。封面/目录两行留空。"
+        pagination:
+          template: "documents_bin/目录模板文件.xlsx"
+          sheet: "Sheet1"
+          note: "分页事实：A4横向(paperSize=9, landscape), scale≈95；页眉包含'共&N页 第&P页'。生成时应将Print_Area动态更新为A1:I{last_row}并保持Print_Titles=1:8，然后导出PDF并以PDF页数作为catalog_page_total。"
+      catalog_1818:
+        detail_note_col_I:
+          template: "documents_bin/1818图册目录模板.xlsx"
+          sheet: "Sheet1"
+          column: "I"
+          start_row: 9
+          value_from: "derived:catalog_detail_note_by_upgrade_range"
+        pagination:
+          template: "documents_bin/1818图册目录模板.xlsx"
+          sheet: "Sheet1"
+          note: "分页事实：A4横向(paperSize=9, landscape), scale≈94；页眉包含'共&N页 第&P页'。建议同catalog_common：动态设Print_Area后导出PDF计页。"
       ied:
         system_code_col_AE:
           template: "documents_bin/IED计划模板文件.xlsx"
@@ -359,6 +503,9 @@ sections:
       internal_code_001:
         select: "frame where frames[].titleblock.internal_code endswith '-001'"
         from: "frames[].titleblock.internal_code"
+      internal_code_base_001:
+        select: "frame where frames[].titleblock.internal_code endswith '-001'"
+        from: "frames[].titleblock.internal_code_base"
       external_code_001:
         select: "frame where frames[].titleblock.internal_code endswith '-001'"
         from: "frames[].titleblock.external_code"
@@ -376,6 +523,41 @@ sections:
         from: "external_code_001"
         transform: "replace_pos_9_11('T01')"
         note: "按 1-based 计数，第9~11位替换；例：JD1NHT11001B25C42SD -> JD1NHT11T01B25C42SD"
+      album_code_001:
+        select: "frame where frames[].titleblock.internal_code endswith '-001'"
+        from: "frames[].titleblock.album_code"
+      status_to_design_phase:
+        from: "frames[].titleblock.status"
+        transform: "map({'CFC':'施工图设计'}, default=status)"
+      cover_title_cn:
+        from: "GlobalDocParams.album_title_cn"
+        transform: "append('封面')"
+      catalog_title_cn:
+        from: "GlobalDocParams.album_title_cn"
+        transform: "append('目录')"
+      cover_title_en:
+        from: "GlobalDocParams.album_title_en"
+        transform: "append(' Cover')"
+      catalog_title_en:
+        from: "GlobalDocParams.album_title_en"
+        transform: "append(' Contents')"
+      cover_paper_size_text:
+        from: "literal"
+        transform: "const('A4文件')"
+      cover_page_total:
+        from: "literal"
+        transform: "const(1)"
+      catalog_paper_size_text:
+        from: "literal"
+        transform: "const('A4文件')"
+      catalog_page_total_from_pdf:
+        from: "catalog_pdf"
+        transform: "count_pdf_pages()"
+        note: "实现建议：Office COM/LibreOffice导出目录PDF后，用 tools/pdf_page_count.py 计页；该页数与模板页眉中的&N一致。"
+      catalog_detail_note_by_upgrade_range:
+        from: "frames[].titleblock.internal_code"
+        transform: "if(seq_in_range(upgrade_start_seq, upgrade_end_seq), upgrade_note_text, '')"
+        note: "seq_in_range：从internal_code取末段-XXX为整数；仅对图纸行使用。"
 
   titleblock_extraction_spec:
     schema_version: "2.0"
@@ -678,6 +860,7 @@ sections:
       scale_text: 比例
       page_info: 张数
       title_cn: 图纸标题
+      title_en: 图纸标题
       revision: 版次
       status: 状态
       date: 日期
@@ -762,10 +945,21 @@ sections:
             page_total: 1
             page_index: 2
       title_cn:
-        purpose: 中文标题（含块内/多行）
+        purpose: 图纸中文标题（从“图纸标题”ROI内文本行分流得到；含块内/多行）
         extract_roi_field_name: 图纸标题
         parse:
-          type: text_multiline
+          type: title_bilingual_split
+        note:
+          - "按“文本行”处理：先在ROI内收集 TEXT/MTEXT/ATTRIB（含块内INSERT递归展开），按y聚类成行、按x排序拼接成行文本。"
+          - "对每一行：若包含中文（CJK）字符则归为中文候选；若全为英文/数字/符号则归为英文候选。"
+          - "中文候选按y从大到小（从上到下）拼接为 title_cn；英文候选同理拼接为 title_en。"
+      title_en:
+        purpose: 图纸英文标题（仅当ROI内存在纯英文行时产出；1818项目通常需要）
+        extract_roi_field_name: 图纸标题
+        parse:
+          type: title_bilingual_split
+        note:
+          - "与 title_cn 共用同一ROI与分流逻辑；不新增ROI。若ROI内无纯英文行则可为空。"
       revision:
         purpose: 版次（修订表“版次/日期/状态”三列之一）
         extract_roi_field_name: 版次

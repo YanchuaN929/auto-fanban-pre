@@ -46,7 +46,8 @@
     "discipline": "结构",
     "scale_text": "1:100",
     "page_info": "共1张 第X张",
-    "title_cn": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
+    "title_cn": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行",
+    "title_en": "For Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
     "revision": "B",
     "status": "CFC",
     "date": "2026.01",
@@ -236,8 +237,23 @@
     },
     "title_cn": {
       "ok": true,
-      "value": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
-      "raw": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles."
+      "value": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行",
+      "raw": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
+      "note": "title_bilingual_split",
+      "cn_lines": [
+        "有可能被打在块内",
+        "这里是图纸标题，这里有可能是一个文本框输入完成",
+        "也有可能是这样分列两行"
+      ]
+    },
+    "title_en": {
+      "ok": true,
+      "value": "For Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
+      "raw": "有可能被打在块内\n这里是图纸标题，这里有可能是一个文本框输入完成\n也有可能是这样分列两行\nFor Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles.",
+      "note": "title_bilingual_split",
+      "en_lines": [
+        "For Project 1818, given the existence of English content, it is also necessary to ensure the independent readability of English titles."
+      ]
     },
     "revision": {
       "ok": true,

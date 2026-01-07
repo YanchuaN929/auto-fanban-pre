@@ -1,0 +1,35 @@
+{
+  "xlsx": "documents_bin\\目录模板文件.xlsx",
+  "sheet1": {
+    "pageSetup": {
+      "paperSize": "9",
+      "scale": "95",
+      "orientation": "landscape"
+    },
+    "pageMargins": {
+      "left": "0.236220472440945",
+      "right": "0.236220472440945",
+      "top": "0.748031496062992",
+      "bottom": "0.748031496062992",
+      "header": "0.31496062992126",
+      "footer": "0.31496062992126"
+    },
+    "printOptions": {
+      "horizontalCentered": "1"
+    },
+    "headerFooter": {
+      "oddHeader": "&C&\"宋体,加粗\"  &R&\"宋体,加粗\" \n\n\n\n\n\n\n共&N页 第&P页",
+      "firstHeader": "&C&B\n\n\n\n\n \n                                                                                                                  共&N页  第&P页"
+    }
+  },
+  "definedNames": [
+    {
+      "name": "_xlnm.Print_Area",
+      "value": "Sheet1!$A$1:$I$42"
+    },
+    {
+      "name": "_xlnm.Print_Titles",
+      "value": "Sheet1!$1:$8"
+    }
+  ]
+}
