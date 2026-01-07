@@ -141,10 +141,10 @@ sections:
             default: "NA"
             source: "frontend"
             description: "系统名称：前端输入（默认 NA）；用于设计文件（对应模板列“系统名称”）"
-          item_name:
+          subitem_name:
             type: "str"
             required: true
-            source: "mapping:subitem_no_to_item_name"
+            source: "mapping:subitem_no_to_subitem_name"
             description: "子项名称：由子项号查对照表得到"
           doc_status:
             type: "str"
@@ -172,6 +172,16 @@ sections:
             default: "A"
             source: "frontend"
             description: "封面版次：前端输入（默认A），写入封面 N5（模板已有“版次：”，在后面追加）；与图签 revision 区分"
+          upgrade_revision:
+            type: "str"
+            required: false
+            source: "frontend"
+            description: "升版版本：前端输入（例如 B/C）；用于目录页眉版次（catalog_revision）"
+          catalog_revision:
+            type: "str"
+            required: true
+            source: "derived:catalog_revision"
+            description: "目录版次：用于目录页眉H5(Rev.)。规则：优先取前端升版版本 upgrade_revision；若未提供则默认取 cover_revision（默认A），保证用户不选升版版本时封面/目录均为A"
           discipline:
             type: "str"
             required: true
@@ -257,12 +267,6 @@ sections:
             default: "升版"
             source: "frontend"
             description: "升版标记写入文本：用于目录明细I列"
-          album_seq:
-            type: "str"
-            required: true
-            source: "tbd"
-            description: "册序：需明确从图签哪个字段提取"
-
           cover_internal_code:
             type: "str"
             required: true
@@ -457,6 +461,12 @@ sections:
           write_mode: "split_into_two_cells"
           split_rule: "en_split_on_whitespace_between_words_near_half"
           note: "I23/I24联动写入：英文仅允许在完整英文单词之间（空白处）分割；优先选择分割后右侧以字母开头的单词。示例：'...~-8.800m secongdary steel shop drawings' -> I23='...~-8.800m'，I24='secongdary steel shop drawings'"
+        cover_revision_cell_M5_append:
+          template: "documents_bin/1818图册封面模板.docx (embedded Excel)"
+          location: "M5"
+          value_from: "GlobalDocParams.cover_revision"
+          write_mode: "append_after_existing_label"
+          note: "1818封面M5单元格原值为'Rev.:'，因此写入cover_revision需做增量追加（例如写成'Rev.:A'）。"
       catalog_common:
         header_internal_code_tm:
           template: "documents_bin/目录模板文件.xlsx"
@@ -468,6 +478,12 @@ sections:
           sheet: "Sheet1"
           cell: "H3"
           value_from: "GlobalDocParams.catalog_external_code"
+        header_catalog_revision:
+          template: "documents_bin/目录模板文件.xlsx"
+          sheet: "Sheet1"
+          cell: "H5"
+          value_from: "GlobalDocParams.catalog_revision"
+          note: "目录页眉版次：取catalog_revision（优先前端升版版本upgrade_revision）"
         detail_note_col_I:
           template: "documents_bin/目录模板文件.xlsx"
           sheet: "Sheet1"
@@ -478,8 +494,13 @@ sections:
         pagination:
           template: "documents_bin/目录模板文件.xlsx"
           sheet: "Sheet1"
-          note: "分页事实：A4横向(paperSize=9, landscape), scale≈95；页眉包含'共&N页 第&P页'。生成时应将Print_Area动态更新为A1:I{last_row}并保持Print_Titles=1:8，然后导出PDF并以PDF页数作为catalog_page_total。"
+          note: "分页事实：A4横向(paperSize=9, landscape), scale≈95；页眉包含'共&N页 第&P页'。生成时应将Print_Area动态更新为A1:I{last_row}并保持Print_Titles=1:8，先导出PDF计页得到catalog_page_total，再把该值回填到目录行(H列)并重新导出PDF，确保xlsx与pdf一致。"
       catalog_1818:
+        header_catalog_revision:
+          template: "documents_bin/1818图册目录模板.xlsx"
+          sheet: "Sheet1"
+          cell: "H5"
+          value_from: "GlobalDocParams.catalog_revision"
         detail_note_col_I:
           template: "documents_bin/1818图册目录模板.xlsx"
           sheet: "Sheet1"
@@ -489,7 +510,7 @@ sections:
         pagination:
           template: "documents_bin/1818图册目录模板.xlsx"
           sheet: "Sheet1"
-          note: "分页事实：A4横向(paperSize=9, landscape), scale≈94；页眉包含'共&N页 第&P页'。建议同catalog_common：动态设Print_Area后导出PDF计页。"
+          note: "分页事实：A4横向(paperSize=9, landscape), scale≈94；页眉包含'共&N页 第&P页'。1818目录E列为双语换行(title_cn+'\\n'+title_en)，会影响行高与分页；建议同catalog_common：动态设Print_Area后，先导出PDF计页得到catalog_page_total，再回填目录行(H列)并重新导出PDF。"
       ied:
         system_code_col_AE:
           template: "documents_bin/IED计划模板文件.xlsx"
@@ -553,7 +574,11 @@ sections:
       catalog_page_total_from_pdf:
         from: "catalog_pdf"
         transform: "count_pdf_pages()"
-        note: "实现建议：Office COM/LibreOffice导出目录PDF后，用 tools/pdf_page_count.py 计页；该页数与模板页眉中的&N一致。"
+        note: "实现建议：Office COM/LibreOffice导出目录PDF后，用 tools/pdf_page_count.py(pypdf) 计页得到catalog_page_total；然后把该值回填到目录明细“目录文件”这一行的H列并重新导出PDF。"
+      catalog_revision:
+        from: "GlobalDocParams.upgrade_revision"
+        transform: "coalesce_nonempty(upgrade_revision, cover_revision)"
+        note: "目录版次优先取前端升版版本；若未提供则取cover_revision（默认A），保证封面/目录默认一致。"
       catalog_detail_note_by_upgrade_range:
         from: "frames[].titleblock.internal_code"
         transform: "if(seq_in_range(upgrade_start_seq, upgrade_end_seq), upgrade_note_text, '')"

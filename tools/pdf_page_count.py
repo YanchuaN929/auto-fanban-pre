@@ -10,8 +10,15 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+try:
+    from pypdf import PdfReader  # type: ignore
+except Exception:  # pragma: no cover
+    PdfReader = None  # type: ignore
+
 
 def count_pdf_pages(path: Path) -> int:
+    if PdfReader is not None:
+        return len(PdfReader(str(path)).pages)
     data = path.read_bytes()
     # Count "/Type /Page" but exclude "/Type /Pages"
     needle = b"/Type /Page"
