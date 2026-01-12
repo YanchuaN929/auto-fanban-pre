@@ -185,8 +185,8 @@ sections:
           discipline:
             type: "str"
             required: true
-            source: "dxf:titleblock.discipline"
-            description: "专业：来自 DXF 图签“专业”"
+            source: "derived:discipline_001"
+            description: "专业：用于封面/目录等全局落点，取 001 图纸的 DXF 图签“专业”（与封面/目录规则一致）"
           revision:
             type: "str"
             required: true
@@ -525,11 +525,16 @@ sections:
         select: "frame where frames[].titleblock.internal_code endswith '-001'"
         from: "frames[].titleblock.internal_code"
       internal_code_base_001:
-        select: "frame where frames[].titleblock.internal_code endswith '-001'"
-        from: "frames[].titleblock.internal_code_base"
+        from: "internal_code_001"
+        transform: "strip_suffix('-001')"
+        note: "内部编码前缀：对 XXXXXXX-XXXXX-001 取 XXXXXXX-XXXXX；若输入已是 XXXXXXX-XXXXX（无-001），则视为已是前缀"
       external_code_001:
         select: "frame where frames[].titleblock.internal_code endswith '-001'"
         from: "frames[].titleblock.external_code"
+      discipline_001:
+        select: "frame where frames[].titleblock.internal_code endswith '-001'"
+        from: "frames[].titleblock.discipline"
+        note: "全局专业（封面/目录使用）：取 001 图纸专业"
       cover_internal_code:
         from: "internal_code_001"
         transform: "replace_suffix('-001','-FM')"
