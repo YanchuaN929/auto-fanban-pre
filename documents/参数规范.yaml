@@ -141,6 +141,128 @@ sections:
             default: "NA"
             source: "frontend"
             description: "系统名称：前端输入（默认 NA）；用于设计文件（对应模板列“系统名称”）"
+          wbs_code:
+            type: "str"
+            required: true
+            source: "frontend"
+            description: "WBS编码：一次任务内全局唯一。业务规则：同一图册（album_internal_code 相同）下封面/目录/001~XXX 所有行 WBS 相同，因此用户只需输入一次，设计文件与 IED 计划共用该值。"
+          ied_status:
+            type: "str"
+            required: true
+            default: "发布"
+            source: "frontend"
+            description: "IED状态：写入 IED计划模板 D列。模板“填写说明”明确：编制状态不驱动生成设计文件；发布状态会驱动产生设计文件并触发更多字段必填/格式校验。"
+          ied_person_qual_category:
+            type: "str"
+            required_when: "ied_status == '发布'"
+            source: "frontend"
+            description: "人员资格类别：写入 IED计划模板 M列；发布状态下必填（具体校验规则见模板中的“设计资格校验规则”sheet）。"
+          ied_planned_hours:
+            type: "str"
+            required_when: "ied_status == '发布'"
+            default: "100"
+            source: "frontend"
+            description: "计划工时：写入 IED计划模板 AT列；发布状态下必填。默认给一个可用值，后续可由规则/映射表细化。"
+          ied_chief_designer:
+            type: "str"
+            required: false
+            source: "frontend"
+            description: "责任设总：写入 IED计划模板 W列。格式建议：姓名@ID（填写说明）。"
+          ied_verify_by:
+            type: "str"
+            required_when: "ied_status == '发布'"
+            source: "frontend"
+            description: "验证人：写入 IED计划模板 AW列。格式：姓名@ID（填写说明）。"
+          ied_verify_date:
+            type: "str"
+            required_when: "ied_status == '发布'"
+            source: "frontend"
+            description: "验证日期：写入 IED计划模板 AX列。格式：YYYY-MM-DD，必须为文本格式（填写说明）。"
+          ied_prepared_by:
+            type: "str"
+            required_when: "ied_status == '发布'"
+            source: "frontend"
+            description: "编制者：写入 IED计划模板 AY列。格式：姓名@ID（填写说明）。"
+          ied_prepared_by_2:
+            type: "str"
+            required: false
+            source: "frontend"
+            description: "第二编制者：写入 IED计划模板 AZ列。格式：姓名@ID（填写说明）。"
+          ied_prepared_date:
+            type: "str"
+            required_when: "ied_status == '发布'"
+            source: "frontend"
+            description: "编制日期：写入 IED计划模板 BA列。格式：YYYY-MM-DD，必须为文本格式（填写说明）。"
+          ied_checked_by:
+            type: "str"
+            required_when: "ied_status == '发布'"
+            source: "frontend"
+            description: "校核者：写入 IED计划模板 BB列。格式：姓名@ID（填写说明）。"
+          ied_checked_date:
+            type: "str"
+            required_when: "ied_status == '发布'"
+            source: "frontend"
+            description: "校核日期：写入 IED计划模板 BC列。格式：YYYY-MM-DD，必须为文本格式（填写说明）。"
+          ied_discipline_leader:
+            type: "str"
+            required: false
+            source: "frontend"
+            description: "工种负责人：写入 IED计划模板 BD列。格式：姓名@ID（填写说明）。"
+          ied_discipline_leader_date:
+            type: "str"
+            required: false
+            source: "frontend"
+            description: "工种负责人审核日期：写入 IED计划模板 BE列。格式：YYYY-MM-DD，必须为文本格式（填写说明）。"
+          ied_reviewed_by:
+            type: "str"
+            required_when: "ied_status == '发布'"
+            source: "frontend"
+            description: "审核者：写入 IED计划模板 BF列。格式：姓名@ID（填写说明）。"
+          ied_reviewed_date:
+            type: "str"
+            required_when: "ied_status == '发布'"
+            source: "frontend"
+            description: "审核日期：写入 IED计划模板 BG列。格式：YYYY-MM-DD，必须为文本格式（填写说明）。"
+          ied_approved_by:
+            type: "str"
+            required: false
+            source: "frontend"
+            description: "审定者：写入 IED计划模板 BH列。格式：姓名@ID（填写说明）。"
+          ied_approved_date:
+            type: "str"
+            required: false
+            source: "frontend"
+            description: "审定日期：写入 IED计划模板 BI列。格式：YYYY-MM-DD，必须为文本格式（填写说明）。"
+          ied_submitted_plan_date:
+            type: "str"
+            required: false
+            source: "frontend"
+            description: "所提交计划（日期）：写入 IED计划模板 N列。格式：YYYY-MM-DD，必须为文本格式（填写说明）。"
+          ied_plan_countersign_date:
+            type: "str"
+            required: false
+            source: "frontend"
+            description: "计划会签日期：写入 IED计划模板 O列。格式：YYYY-MM-DD，必须为文本格式（填写说明）。"
+          ied_publish_plan_date:
+            type: "str"
+            required: false
+            source: "frontend"
+            description: "出版计划（日期）：写入 IED计划模板 P列。格式：YYYY-MM-DD，必须为文本格式（填写说明）。"
+          ied_external_plan_date:
+            type: "str"
+            required: false
+            source: "frontend"
+            description: "外部计划（日期）：写入 IED计划模板 Q列。格式：YYYY-MM-DD，必须为文本格式（填写说明）。"
+          ied_fu_plan_date:
+            type: "str"
+            required: false
+            source: "frontend"
+            description: "FU计划（日期）：写入 IED计划模板 S列。格式：YYYY-MM-DD，必须为文本格式（填写说明）。"
+          ied_planned_wr_date:
+            type: "str"
+            required: false
+            source: "frontend"
+            description: "计划WR日期：写入 IED计划模板 BQ列。格式建议：YYYY-MM-DD（模板表头为日期类）。"
           subitem_name:
             type: "str"
             required: true
@@ -519,6 +641,164 @@ sections:
           value_from: "GlobalDocParams.system_code"
           default: "NA"
           note: "模板表头为“系统代码”；你已确认来源为前端输入（默认 NA）"
+        ied_status_col_D:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "D"
+          value_from: "GlobalDocParams.ied_status"
+          default: "发布"
+          note: "IED状态：模板“填写说明”明确：编制不驱动生成设计文件；发布会驱动并触发更多字段必填。你要求默认发布。"
+        wbs_code_col_E:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "E"
+          value_from: "GlobalDocParams.wbs_code"
+          note: "WBS编码：填写说明为必填项。业务规则：同一图册内所有行共用同一个WBS，用户输入一次即可。"
+      design:
+        wbs_code_col_B:
+          template: "documents_bin/设计文件模板.xlsx"
+          sheet: "设计文件模板"
+          column: "B"
+          value_from: "GlobalDocParams.wbs_code"
+          note: "设计文件WBS编码：同一图册内封面/目录/001~XXX 全部共用同一个WBS，来源为全局 wbs_code。"
+        planned_hours_col_AT:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "AT"
+          value_from: "GlobalDocParams.ied_planned_hours"
+          note: "计划工时：发布状态下必填（填写说明）。"
+        person_qual_category_col_M:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "M"
+          value_from: "GlobalDocParams.ied_person_qual_category"
+          note: "人员资格类别：发布状态下必填（填写说明）；具体校验规则见模板“设计资格校验规则”。"
+        classification_col_BK:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "BK"
+          value_from: "GlobalDocParams.classification"
+          note: "密级：发布状态下下拉选择/必填（填写说明）。"
+        chief_designer_col_W:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "W"
+          value_from: "GlobalDocParams.ied_chief_designer"
+          note: "责任设总：填写说明中为人员类字段，格式建议 姓名@ID。"
+        verify_by_col_AW:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "AW"
+          value_from: "GlobalDocParams.ied_verify_by"
+          note: "验证人：发布状态下常见必填，格式 姓名@ID（填写说明）。"
+        verify_date_col_AX:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "AX"
+          value_from: "GlobalDocParams.ied_verify_date"
+          note: "验证日期：发布状态下必填，YYYY-MM-DD 文本格式（填写说明）。"
+        prepared_by_col_AY:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "AY"
+          value_from: "GlobalDocParams.ied_prepared_by"
+          note: "编制者：发布状态下必填，格式 姓名@ID（填写说明）。"
+        prepared_by_2_col_AZ:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "AZ"
+          value_from: "GlobalDocParams.ied_prepared_by_2"
+          note: "第二编制者：格式 姓名@ID（填写说明）。"
+        prepared_date_col_BA:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "BA"
+          value_from: "GlobalDocParams.ied_prepared_date"
+          note: "编制日期：发布状态下必填，YYYY-MM-DD 文本格式（填写说明）。"
+        checked_by_col_BB:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "BB"
+          value_from: "GlobalDocParams.ied_checked_by"
+          note: "校核者：发布状态下必填，格式 姓名@ID（填写说明）。"
+        checked_date_col_BC:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "BC"
+          value_from: "GlobalDocParams.ied_checked_date"
+          note: "校核日期：发布状态下必填，YYYY-MM-DD 文本格式（填写说明）。"
+        discipline_leader_col_BD:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "BD"
+          value_from: "GlobalDocParams.ied_discipline_leader"
+          note: "工种负责人：格式 姓名@ID（填写说明）。"
+        discipline_leader_date_col_BE:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "BE"
+          value_from: "GlobalDocParams.ied_discipline_leader_date"
+          note: "工种负责人审核日期：YYYY-MM-DD 文本格式（填写说明）。"
+        reviewed_by_col_BF:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "BF"
+          value_from: "GlobalDocParams.ied_reviewed_by"
+          note: "审核者：发布状态下必填，格式 姓名@ID（填写说明）。"
+        reviewed_date_col_BG:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "BG"
+          value_from: "GlobalDocParams.ied_reviewed_date"
+          note: "审核日期：发布状态下必填，YYYY-MM-DD 文本格式（填写说明）。"
+        approved_by_col_BH:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "BH"
+          value_from: "GlobalDocParams.ied_approved_by"
+          note: "审定者：格式 姓名@ID（填写说明）。"
+        approved_date_col_BI:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "BI"
+          value_from: "GlobalDocParams.ied_approved_date"
+          note: "审定日期：YYYY-MM-DD 文本格式（填写说明）。"
+        submitted_plan_date_col_N:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "N"
+          value_from: "GlobalDocParams.ied_submitted_plan_date"
+          note: "所提交计划：填写说明要求日期格式 YYYY-MM-DD 且必须为文本格式。"
+        plan_countersign_date_col_O:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "O"
+          value_from: "GlobalDocParams.ied_plan_countersign_date"
+          note: "计划会签日期：YYYY-MM-DD 文本格式（填写说明）。"
+        publish_plan_date_col_P:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "P"
+          value_from: "GlobalDocParams.ied_publish_plan_date"
+          note: "出版计划：填写说明要求日期格式 YYYY-MM-DD 且必须为文本格式。"
+        external_plan_date_col_Q:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "Q"
+          value_from: "GlobalDocParams.ied_external_plan_date"
+          note: "外部计划：填写说明要求日期格式 YYYY-MM-DD 且必须为文本格式。"
+        fu_plan_date_col_S:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "S"
+          value_from: "GlobalDocParams.ied_fu_plan_date"
+          note: "FU计划：填写说明要求日期格式 YYYY-MM-DD 且必须为文本格式。"
+        planned_wr_date_col_BQ:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "BQ"
+          value_from: "GlobalDocParams.ied_planned_wr_date"
+          note: "计划WR日期：模板表头为日期类字段，建议用 YYYY-MM-DD 文本格式。"
 
     derived_rules:
       internal_code_001:
@@ -588,6 +868,7 @@ sections:
         from: "frames[].titleblock.internal_code"
         transform: "if(seq_in_range(upgrade_start_seq, upgrade_end_seq), upgrade_note_text, '')"
         note: "seq_in_range：从internal_code取末段-XXX为整数；仅对图纸行使用。"
+      # IED 的日期/人员字段需要逐列独立输入（不做“同值回填”），因此不再提供单一 ied_date_text 派生字段。
 
   titleblock_extraction_spec:
     schema_version: "2.0"
