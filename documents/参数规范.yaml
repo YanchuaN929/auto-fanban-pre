@@ -155,29 +155,57 @@ sections:
           ied_person_qual_category:
             type: "str"
             required_when: "ied_status == '发布'"
+            default: "一般核安全物项-民用"
             source: "frontend"
             description: "人员资格类别：写入 IED计划模板 M列；发布状态下必填（具体校验规则见模板中的“设计资格校验规则”sheet）。"
-          ied_planned_hours:
+          work_hours:
             type: "str"
             required_when: "ied_status == '发布'"
             default: "100"
             source: "frontend"
-            description: "计划工时：写入 IED计划模板 AT列；发布状态下必填。默认给一个可用值，后续可由规则/映射表细化。"
+            description: "工时数（统一输入）：用户前端只输入一次，写入 IED计划模板 AT列（计划工时）与 设计文件模板 Z列（实际工时数）。发布状态下作为 IED 计划工时必填项；默认 100。"
           ied_chief_designer:
             type: "str"
             required: false
             source: "frontend"
             description: "责任设总：写入 IED计划模板 W列。格式建议：姓名@ID（填写说明）。"
-          ied_verify_by:
+          ied_change_flag:
+            type: "str"
+            required: false
+            source: "frontend"
+            description: "IED变更标记：写入 IED计划模板 B列。前端选择（MOD/CAN/REC/IDM…），一次输入全行复用。"
+          ied_doc_type:
+            type: "str"
+            required: true
+            source: "frontend"
+            description: "IED文档类型：写入 IED计划模板 C列。前端选择（图册/文件/图纸/章节…），一次输入全行复用。"
+          ied_fu_flag:
+            type: "str"
+            required: false
+            default: "N"
+            source: "frontend"
+            description: "FU标记：写入 IED计划模板 R列。前端输入/选择（默认N），一次输入全行复用。"
+          ied_internal_tag:
+            type: "str"
+            required: false
+            default: "否"
+            source: "frontend"
+            description: "IED内部标识：写入 IED计划模板 U列。前端输入（默认否），一次输入全行复用。"
+          ied_design_type:
+            type: "str"
+            required: false
+            source: "frontend"
+            description: "设计类型：写入 IED计划模板 V列。前端选择，候选来自模板Sheet4“AP1000设计类型”A列，一次输入全行复用。"
+          ied_responsible_unit:
+            type: "str"
+            required: false
+            source: "frontend"
+            description: "责任单位：写入 IED计划模板 X列。前端选择，候选建议来自 documents_bin/responsible_unit.json，一次输入全行复用。"
+          ied_discipline_office:
             type: "str"
             required_when: "ied_status == '发布'"
             source: "frontend"
-            description: "验证人：写入 IED计划模板 AW列。格式：姓名@ID（填写说明）。"
-          ied_verify_date:
-            type: "str"
-            required_when: "ied_status == '发布'"
-            source: "frontend"
-            description: "验证日期：写入 IED计划模板 AX列。格式：YYYY-MM-DD，必须为文本格式（填写说明）。"
+            description: "专业室：写入 IED计划模板 BJ列。前端选择，候选建议来自 documents_bin/responsible_unit.json；写入值取所选字符串最后一个“-”后的文本（如“...-结构一室”写“结构一室”）。一次输入全行复用。"
           ied_prepared_by:
             type: "str"
             required_when: "ied_status == '发布'"
@@ -238,11 +266,6 @@ sections:
             required: false
             source: "frontend"
             description: "所提交计划（日期）：写入 IED计划模板 N列。格式：YYYY-MM-DD，必须为文本格式（填写说明）。"
-          ied_plan_countersign_date:
-            type: "str"
-            required: false
-            source: "frontend"
-            description: "计划会签日期：写入 IED计划模板 O列。格式：YYYY-MM-DD，必须为文本格式（填写说明）。"
           ied_publish_plan_date:
             type: "str"
             required: false
@@ -258,11 +281,6 @@ sections:
             required: false
             source: "frontend"
             description: "FU计划（日期）：写入 IED计划模板 S列。格式：YYYY-MM-DD，必须为文本格式（填写说明）。"
-          ied_planned_wr_date:
-            type: "str"
-            required: false
-            source: "frontend"
-            description: "计划WR日期：写入 IED计划模板 BQ列。格式建议：YYYY-MM-DD（模板表头为日期类）。"
           subitem_name:
             type: "str"
             required: true
@@ -634,13 +652,24 @@ sections:
           sheet: "Sheet1"
           note: "分页事实：A4横向(paperSize=9, landscape), scale≈94；页眉包含'共&N页 第&P页'。1818目录E列为双语换行(title_cn+'\\n'+title_en)，会影响行高与分页；建议同catalog_common：动态设Print_Area后，先导出PDF计页得到catalog_page_total，再回填目录行(H列)并重新导出PDF。"
       ied:
+        change_flag_col_B:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "B"
+          value_from: "GlobalDocParams.ied_change_flag"
+          note: "变更标记：前端选择（MOD/CAN/REC/IDM…），一次输入全行复用。"
+        doc_type_col_C:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "C"
+          value_from: "GlobalDocParams.ied_doc_type"
+          note: "文档类型：前端选择（图册/文件/图纸/章节…），一次输入全行复用。"
         system_code_col_AE:
           template: "documents_bin/IED计划模板文件.xlsx"
           sheet: "IED导入模板 (修改)"
           column: "AE"
-          value_from: "GlobalDocParams.system_code"
-          default: "NA"
-          note: "模板表头为“系统代码”；你已确认来源为前端输入（默认 NA）"
+          value_from: "derived:fixed_empty_text"
+          note: "系统代码：按参数表要求本期固定留空。"
         ied_status_col_D:
           template: "documents_bin/IED计划模板文件.xlsx"
           sheet: "IED导入模板 (修改)"
@@ -654,6 +683,69 @@ sections:
           column: "E"
           value_from: "GlobalDocParams.wbs_code"
           note: "WBS编码：填写说明为必填项。业务规则：同一图册内所有行共用同一个WBS，用户输入一次即可。"
+        planned_hours_col_AT:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "AT"
+          value_from: "GlobalDocParams.work_hours"
+          default: "100"
+          note: "计划工时：来自全局 work_hours（用户一次输入），按参数表口径与设计文件“实际工时数(Z)”同值。"
+        original_external_code_col_H:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "H"
+          value_from: "derived:fixed_empty_text"
+          note: "原文件编码：按参数表要求本期固定留空（为后续IDM/升级预留）。"
+        fu_flag_col_R:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "R"
+          value_from: "GlobalDocParams.ied_fu_flag"
+          default: "N"
+          note: "FU标记：前端输入/默认N，一次输入全行复用。"
+        plan_adjust_basis_col_T:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "T"
+          value_from: "derived:fixed_empty_text"
+          note: "计划调整依据：按参数表要求本期固定留空。"
+        internal_tag_col_U:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "U"
+          value_from: "GlobalDocParams.ied_internal_tag"
+          default: "否"
+          note: "内部标识：前端输入/默认否，一次输入全行复用。"
+        design_type_col_V:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "V"
+          value_from: "GlobalDocParams.ied_design_type"
+          note: "设计类型：前端选择，候选来自模板Sheet4“AP1000设计类型”A列，一次输入全行复用。"
+        responsible_unit_col_X:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "X"
+          value_from: "GlobalDocParams.ied_responsible_unit"
+          note: "责任单位：前端选择，候选建议来自 documents_bin/responsible_unit.json，一次输入全行复用。"
+        discipline_office_col_BJ:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "BJ"
+          value_from: "GlobalDocParams.ied_discipline_office"
+          note: "专业室：前端选择，候选建议来自 documents_bin/responsible_unit.json；写入值取最后一个“-”后的文本。一次输入全行复用。"
+        verify_by_col_AW:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "AW"
+          value_from: "derived:fixed_empty_text"
+          note: "验证人：按参数表要求本期固定留空（取消发布状态必填）。"
+        verify_date_col_AX:
+          template: "documents_bin/IED计划模板文件.xlsx"
+          sheet: "IED导入模板 (修改)"
+          column: "AX"
+          value_from: "derived:fixed_empty_text"
+          note: "验证日期：按参数表要求本期固定留空（取消发布状态必填）。"
       design:
         wbs_code_col_B:
           template: "documents_bin/设计文件模板.xlsx"
@@ -665,8 +757,16 @@ sections:
           template: "documents_bin/IED计划模板文件.xlsx"
           sheet: "IED导入模板 (修改)"
           column: "AT"
-          value_from: "GlobalDocParams.ied_planned_hours"
-          note: "计划工时：发布状态下必填（填写说明）。"
+          value_from: "GlobalDocParams.work_hours"
+          default: "100"
+          note: "计划工时：来自全局 work_hours（用户一次输入），按参数表口径与设计文件“实际工时数(Z)”同值。"
+        actual_hours_col_Z:
+          template: "documents_bin/设计文件模板.xlsx"
+          sheet: "设计文件模板"
+          column: "Z"
+          value_from: "GlobalDocParams.work_hours"
+          default: "100"
+          note: "实际工时数：来自全局 work_hours（用户一次输入），按参数表口径与 IED“计划工时(AT)”同值。"
         person_qual_category_col_M:
           template: "documents_bin/IED计划模板文件.xlsx"
           sheet: "IED导入模板 (修改)"
@@ -685,18 +785,6 @@ sections:
           column: "W"
           value_from: "GlobalDocParams.ied_chief_designer"
           note: "责任设总：填写说明中为人员类字段，格式建议 姓名@ID。"
-        verify_by_col_AW:
-          template: "documents_bin/IED计划模板文件.xlsx"
-          sheet: "IED导入模板 (修改)"
-          column: "AW"
-          value_from: "GlobalDocParams.ied_verify_by"
-          note: "验证人：发布状态下常见必填，格式 姓名@ID（填写说明）。"
-        verify_date_col_AX:
-          template: "documents_bin/IED计划模板文件.xlsx"
-          sheet: "IED导入模板 (修改)"
-          column: "AX"
-          value_from: "GlobalDocParams.ied_verify_date"
-          note: "验证日期：发布状态下必填，YYYY-MM-DD 文本格式（填写说明）。"
         prepared_by_col_AY:
           template: "documents_bin/IED计划模板文件.xlsx"
           sheet: "IED导入模板 (修改)"
@@ -773,8 +861,8 @@ sections:
           template: "documents_bin/IED计划模板文件.xlsx"
           sheet: "IED导入模板 (修改)"
           column: "O"
-          value_from: "GlobalDocParams.ied_plan_countersign_date"
-          note: "计划会签日期：YYYY-MM-DD 文本格式（填写说明）。"
+          value_from: "derived:fixed_empty_text"
+          note: "计划会签日期：按参数表要求固定留空。"
         publish_plan_date_col_P:
           template: "documents_bin/IED计划模板文件.xlsx"
           sheet: "IED导入模板 (修改)"
@@ -797,8 +885,8 @@ sections:
           template: "documents_bin/IED计划模板文件.xlsx"
           sheet: "IED导入模板 (修改)"
           column: "BQ"
-          value_from: "GlobalDocParams.ied_planned_wr_date"
-          note: "计划WR日期：模板表头为日期类字段，建议用 YYYY-MM-DD 文本格式。"
+          value_from: "derived:fixed_empty_text"
+          note: "计划WR日期：按参数表要求固定留空。"
 
     derived_rules:
       internal_code_001:
@@ -868,6 +956,10 @@ sections:
         from: "frames[].titleblock.internal_code"
         transform: "if(seq_in_range(upgrade_start_seq, upgrade_end_seq), upgrade_note_text, '')"
         note: "seq_in_range：从internal_code取末段-XXX为整数；仅对图纸行使用。"
+      fixed_empty_text:
+        from: "literal"
+        transform: "const('')"
+        note: "用于需要“固定留空”的单元格列（例如 IED: H/T/AE/AW/AX 等）。"
       # IED 的日期/人员字段需要逐列独立输入（不做“同值回填”），因此不再提供单一 ied_date_text 派生字段。
 
   titleblock_extraction_spec:
