@@ -1,0 +1,31 @@
+# 遗漏检查清单（依据 A4特殊逻辑.md / 参数表.md / 参数规范-old.yaml 对比现行参数规范 v2）
+#
+# 目的：列出新版参数规范（documents/参数规范.yaml）尚未覆盖或需要确认的要点，便于后续补全。
+
+items:
+  - id: cover_classification_and_status_cells
+    desc: "通用封面与 1818 封面未明确密级/状态的写入单元格；1818 版本 classification 仍为“待确认”。"
+    impact: "无法将前端密级/状态动态写入封面右上角，影响 PDF 正确性。"
+    action: "确认两套封面模板中密级/状态的具体单元格坐标，并补充到 cover_bindings。"
+    sure: "确认封面的密级无需程序写入，状态为Q5单元格，此处为QRS合并单元格，内部有“状态：”字样，写入状态为增量写入，写入内容为全局变量doc_status，来源规则为取001图纸的status值，另外还需要注意1818项目的位置有变化，为P5，同时文本变成“Status：”"
+
+  - id: cover_internal_code_binding
+    desc: "派生了 cover_internal_code（-FM）但封面绑定中未消费，缺少写入位置。"
+    impact: "封面内部编码无法落地，影响传图文件一致性。"
+    action: "确认封面内部编码在 docx 内嵌 Excel 的单元格，并在 cover_bindings 中新增写入。"
+    sure: "确认封面内部编码无需写入封面文件中，封面内部编码出现的位置应该仅出现在图册目录、设计文件、IED计划文件中"
+
+  - id: catalog_header_titles_for_cover_and_catalog_rows
+    desc: "目录明细行目前统一使用 title_cn，但封面行应使用 cover_title_cn，目录行应使用 catalog_title_cn（参数表要求）。"
+    impact: "目录首两行名称可能与预期不符。"
+    action: "在 row_order=封面/目录/001~XXX 的写入逻辑中，显式切换到 cover_title_cn / catalog_title_cn。"
+    sure: "同意你的action，同时需要注意在1818项目中还需要在title_cn下写入title_en（同一单元格内）"
+
+  - id: numeric_precision_policy_removed
+    desc: "老版规范的 numeric_precision_policy（ROI 标定值保留 3 位小数的说明）在新版缺失。"
+    impact: "实现端缺少对标定数值/容差的精度约定，可能导致解析偏差。"
+    action: "补回 numeric_precision_policy 或在容差章节明确浮点精度策略。"
+    sure: "同意你的action"
+
+notes:
+  - "A4 多页规则（A4特殊逻辑.md）已完整收录于新版 a4_multipage 段，未发现遗漏。"

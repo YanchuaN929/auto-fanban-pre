@@ -1,0 +1,53 @@
+# 工具脚本用途与去留建议
+# 说明：针对 tools/ 目录下现有小程序，标记用途、依赖、是否建议删除。
+
+tools:
+  - name: test_dxf_roi_extract.py
+    purpose: "DXF→ROI→字段解析的主测试/调试脚本，可输出完整/摘要 JSON 报告。"
+    deps: ["ezdxf", "yaml"]
+    keep: "保留复用（回归与调试ROI解析的核心脚本）"
+
+  - name: _inspect_rev_roi.py
+    purpose: "基于已生成的 summary 报告，快速打印版次/状态/日期 ROI 内命中内容（一次性排查脚本）。"
+    deps: ["ezdxf", "test_dxf_roi_extract"]
+    keep: "可删除；如需排查可临时从历史记录恢复。"
+
+  - name: check_md_yaml_correspondence.py
+    purpose: "比对 参数表.md 与 参数规范.yaml 的字段键差异，提示缺失/多余字段。"
+    deps: ["pyyaml"]
+    keep: "保留复用（文档与规范一致性检查）。"
+
+  - name: check_yaml_precision_damage.py
+    purpose: "比较当前规范与 .bak/.bak2，确认数值四舍五入未破坏正则/整数等结构。"
+    deps: []
+    keep: "保留框架（需要时用来审计规范变更的安全性）。"
+
+  - name: inspect_office_templates.py
+    purpose: "纯标准库解析 docx/xlsx，输出 sheet 列表、合并单元格、关键单元格、是否含 OLE 等信息。"
+    deps: []
+    keep: "保留复用（模板扫描与回归基准）。"
+
+  - name: inspect_xlsx_pagination.py
+    purpose: "只读检查目录模板的分页/打印设置与 definedNames。"
+    deps: []
+    keep: "保留复用（验证目录分页配置）。"
+
+  - name: pdf_page_count.py
+    purpose: "统计 PDF 页数（优先 pypdf，兜底正则计 /Type /Page）。"
+    deps: ["pypdf (可选)"]
+    keep: "保留复用（目录页数回填、PDF计页）。"
+
+  - name: round_yaml_floats.py
+    purpose: "在指定 YAML 段落内把标定数值统一保留 N 位小数，支持固定小数位与备份。"
+    deps: []
+    keep: "保留框架（维护标定精度时使用）。"
+
+  - name: simulate_catalog_pagination.py
+    purpose: "用 Excel COM 模拟目录写入/分页/导出PDF并计页（含封面/目录/001~n 生成）。"
+    deps: ["comtypes", "pdf_page_count"]
+    keep: "保留复用（分页算法验证与回归）。"
+
+  - name: text_split_rules.py
+    purpose: "封面/1818 标题的中英文两格分割规则实现，可内嵌到正式逻辑。"
+    deps: []
+    keep: "保留复用（建议合入主代码后此文件可降级为参考）。"
