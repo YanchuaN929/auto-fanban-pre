@@ -104,6 +104,11 @@ doc_generation:
     from_titleblock:
       engineering_no:    { type: str, required: true, source: "dxf:frames[001].titleblock.engineering_no", desc: "工程号(4位)" }
       subitem_no:        { type: str, required: true, source: "dxf:frames[001].titleblock.subitem_no",     desc: "子项号" }
+      subitem_name:
+        type: str
+        required: true
+        source: frontend
+        desc: "子项名称（暂由前端直接输入，取消子项号映射表）"
       discipline:        { type: str, required: true, source: "dxf:frames[001].titleblock.discipline",     desc: "专业（取001图纸）" }
       revision:          { type: str, required: true, source: "dxf:frames[001].titleblock.revision",       desc: "版次" }
       doc_status:        { type: str, required: true, source: "dxf:frames[001].titleblock.status",         desc: "状态" }
@@ -255,12 +260,6 @@ doc_generation:
     cover_title_en:   { from: album_title_en, transform: "append(' Cover')", when: "project_no == '1818'" }
     catalog_title_en: { from: album_title_en, transform: "append(' Contents')", when: "project_no == '1818'" }
     
-    # === 名称派生 ===
-    subitem_name:
-      from: subitem_no
-      transform: "lookup(subitem_no_to_name_map)"
-      desc: "子项名称，由子项号查对照表"
-    
     # === 阶段派生 ===
     design_phase:
       from: "titleblock.status"
@@ -311,12 +310,8 @@ doc_generation:
         结构: "JG"
         建筑: "JZ"
         总图运输: "ZY"
-        # 其他专业待补充
       status_to_design_phase:
         CFC: "施工图设计"
-        # 其他状态待补充
-      subitem_no_to_name:
-        desc: "子项号→子项名称对照表，位置待定"
 
   # --------------------------------------------------------------------------
   # 2.5 字段优先级与覆盖约定
