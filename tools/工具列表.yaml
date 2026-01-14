@@ -7,11 +7,6 @@ tools:
     deps: ["ezdxf", "yaml"]
     keep: "保留复用（回归与调试ROI解析的核心脚本）"
 
-  - name: _inspect_rev_roi.py
-    purpose: "基于已生成的 summary 报告，快速打印版次/状态/日期 ROI 内命中内容（一次性排查脚本）。"
-    deps: ["ezdxf", "test_dxf_roi_extract"]
-    keep: "可删除；如需排查可临时从历史记录恢复。"
-
   - name: check_md_yaml_correspondence.py
     purpose: "比对 参数表.md 与 参数规范.yaml 的字段键差异，提示缺失/多余字段。"
     deps: ["pyyaml"]
