@@ -59,7 +59,13 @@ def load_spec(spec_path: Path) -> dict[str, Any]:
 
 
 def get_titleblock_spec(spec: dict[str, Any]) -> dict[str, Any]:
-    return spec["sections"]["titleblock_extraction_spec"]
+    """适配v2.0 YAML结构，优先尝试顶层titleblock_extract，兜底旧版sections路径"""
+    if "titleblock_extract" in spec:
+        return spec["titleblock_extract"]
+    # 兜底旧版路径
+    if "sections" in spec and "titleblock_extraction_spec" in spec["sections"]:
+        return spec["sections"]["titleblock_extraction_spec"]
+    raise KeyError("无法找到 titleblock_extract 或 sections.titleblock_extraction_spec")
 
 
 def iter_text_items_in_space(space: Any) -> Iterable[TextItem]:

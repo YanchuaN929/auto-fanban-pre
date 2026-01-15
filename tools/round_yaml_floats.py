@@ -27,12 +27,30 @@ def _round_str(num_str: str, decimals: int, *, fixed_decimals: bool) -> str:
 
 def _should_format_number(path_keys: list[str], key: str | None) -> bool:
     """
-    Only format numbers in calibration-related blocks:
+    Only format numbers in calibration-related blocks.
+    适配v2.0 YAML结构：优先支持顶层titleblock_extract，兼容旧版sections路径。
+    
+    - titleblock_extract.paper_variants.*.(W|H)
+    - titleblock_extract.roi_profiles.*.fields.*.[list items]
+    - titleblock_extract.(tolerances|roi_profiles.*.tolerance)
+    或旧版：
     - sections.titleblock_extraction_spec.scale_fit.canonical_variants.*.(W|H)
     - sections.titleblock_extraction_spec.roi_profiles.*.fields_rb_offset_1to1.*.[list items]
-    - sections.titleblock_extraction_spec.(tolerance|scale_fit.fit_method|roi_profiles.*.tolerance_abs)
+    - sections.titleblock_extraction_spec.(tolerance|roi_profiles.*.tolerance_abs)
     """
     path = "/".join(path_keys)
+    
+    # v2.0路径
+    if "titleblock_extract/paper_variants" in path:
+        return key in {"W", "H"}
+    if "titleblock_extract/roi_profiles" in path:
+        if "fields" in path:
+            return True  # list items in fields
+        return key in {"tolerance"}
+    if "titleblock_extract/tolerances" in path:
+        return True
+    
+    # 旧版路径兼容
     if "sections/titleblock_extraction_spec/scale_fit/canonical_variants" in path:
         return key in {"W", "H"}
     if "sections/titleblock_extraction_spec/roi_profiles" in path:
@@ -43,6 +61,7 @@ def _should_format_number(path_keys: list[str], key: str | None) -> bool:
         return True
     if "sections/titleblock_extraction_spec/scale_fit/fit_method" in path:
         return True
+    
     return False
 
 

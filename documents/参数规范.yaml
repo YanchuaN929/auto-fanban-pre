@@ -41,6 +41,18 @@ enums:
     建筑: "JZ"
     总图运输: "ZY"
     # 其他专业待补充
+  
+  # 专业中英文映射（用于1818封面）
+  discipline_en_map:
+    结构: "Structural"
+    建筑: "Architectural"
+    总图运输: "Site & Transportation"
+    # 其他专业待补充
+  
+  # 设计阶段中英文映射（用于1818封面）
+  design_phase_en_map:
+    施工图设计: "Constructing Design"
+    # 其他阶段待补充
 
 # ============================================================================
 # 二、文档生成模块 (doc_generation)
@@ -48,7 +60,7 @@ enums:
 doc_generation:
   description: |
     文档生成模块负责基于图签提取结果生成：封面(Word+PDF)、目录(Excel+PDF)、
-    设计文件(Excel+PDF)、IED计划(Excel+PDF)。DXF 仅作为中间文件，不对用户输出。
+    设计文件(Excel+PDF)、IED计划(仅Excel，单独输出，不导出PDF且不打包入package.zip)。DXF 仅作为中间文件，不对用户输出。
 
   # --------------------------------------------------------------------------
   # 2.1 生成选项
@@ -108,7 +120,12 @@ doc_generation:
         type: str
         required: true
         source: frontend
-        desc: "子项名称（暂由前端直接输入，取消子项号映射表）"
+        desc: "子项名称（中文）（前端直接输入）"
+      subitem_name_en:
+        type: str
+        required_when: "project_no == '1818'"
+        source: frontend
+        desc: "子项名称（英文）（仅1818项目，前端直接输入）"
       discipline:        { type: str, required: true, source: "dxf:frames[001].titleblock.discipline",     desc: "专业（取001图纸）" }
       revision:          { type: str, required: true, source: "dxf:frames[001].titleblock.revision",       desc: "版次" }
       doc_status:        { type: str, required: true, source: "dxf:frames[001].titleblock.status",         desc: "状态" }
@@ -310,8 +327,14 @@ doc_generation:
         结构: "JG"
         建筑: "JZ"
         总图运输: "ZY"
+      discipline_to_en:
+        结构: "Structural"
+        建筑: "Architectural"
+        总图运输: "Site & Transportation"
       status_to_design_phase:
         CFC: "施工图设计"
+      design_phase_to_en:
+        施工图设计: "Constructing Design"
 
   # --------------------------------------------------------------------------
   # 2.5 字段优先级与覆盖约定
@@ -366,9 +389,12 @@ doc_generation:
       "1818":
         engineering_no:      { cell: "I10", label: "D10/D11" }      # 比通用少1行
         subitem_no:          { cell: "I12", label: "D12/D13" }      # 比通用少1行
-        subitem_name:        { cell: "I14", label: "D14" }          # 比通用少1行
-        design_phase:        { cell: "I16", label: "D16" }          # 比通用少1行
-        discipline:          { cell: "I18", label: "D18" }          # 比通用少1行
+        subitem_name:        { cell: "I14", label: "D14", desc: "子项名称（中文）" }
+        subitem_name_en:     { cell: "I15", label: "D15", desc: "子项名称（英文）" }
+        design_phase:        { cell: "I16", label: "D16", desc: "设计阶段（中文）" }
+        design_phase_en:     { cell: "I17", label: "D17", desc: "设计阶段（英文），由映射表生成" }
+        discipline:          { cell: "I18", label: "D18", desc: "专业（中文）" }
+        discipline_en:       { cell: "I19", label: "D19", desc: "专业（英文），由映射表生成" }
         album_title_cn:      { cell: "I21+I22", split_rule: "cn_split_prefer_right_is_cjk_near_half" }
         album_title_en:      { cell: "I23+I24", split_rule: "en_split_on_whitespace_between_words_near_half" }
         album_code:          { cell: "I25", label: "D25/D26" }
@@ -913,7 +939,7 @@ a4_multipage:
     # 方法1：固定ROI（优先）
     page_marker_roi:
       description: "右上角页码标记区域(1:1初始值)"
-      rb_offset: [20.0, 120.0, 255.0, 295.0]  # [dx_right, dx_left, dy_bottom, dy_top]
+      rb_offset: [0.0, 120.0, 255.0, 295.0]  # [dx_right, dx_left, dy_bottom, dy_top]
     pattern: "共\\s*(\\d+)\\s*张\\s*第\\s*(\\d+)\\s*张"
     
     # 方法2：位置评分兜底（ROI未命中时）
@@ -943,13 +969,8 @@ a4_multipage:
       - status
       - date
       - scale_text
-    
-    # 回填ROI（用于从Slave补充Master缺失字段）
-    backfill_roi:
-      description: "右上角文本ROI(1:1初始值)，用于回填内部编码等"
-      rb_offset: [30.0, 160.0, 270.0, 295.0]
-    backfill_rule: "若Master缺失关键字段，从Slave页做多数表决回填"
-    backfill_flag: "A4多页_元数据回填"
+    missing_master_fields_policy: "error"
+    missing_master_fields_flag: "A4多页_Master缺关键字段"
 
   # --------------------------------------------------------------------------
   # 4.6 一致性校验

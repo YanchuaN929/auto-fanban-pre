@@ -8,21 +8,52 @@ import yaml
 
 
 def _collect_yaml_global_keys(spec: dict) -> set[str]:
-    doc = spec["sections"]["doc_generation_spec"]
-    fields = doc["objects"]["GlobalDocParams"]["fields"]
-    return set(fields.keys())
+    """适配v2.0 YAML结构，优先尝试顶层doc_generation，兜底旧版sections路径"""
+    if "doc_generation" in spec:
+        doc = spec["doc_generation"]
+        params = doc.get("params", {})
+        # 收集所有嵌套字段的keys
+        keys = set()
+        for category in ["project", "from_titleblock", "cover", "catalog", "design", "ied"]:
+            if category in params:
+                keys.update(params[category].keys())
+        return keys
+    # 兜底旧版路径
+    if "sections" in spec and "doc_generation_spec" in spec["sections"]:
+        doc = spec["sections"]["doc_generation_spec"]
+        fields = doc["objects"]["GlobalDocParams"]["fields"]
+        return set(fields.keys())
+    raise KeyError("无法找到 doc_generation 或 sections.doc_generation_spec")
 
 
 def _collect_yaml_derived_keys(spec: dict) -> set[str]:
-    doc = spec["sections"]["doc_generation_spec"]
-    derived = doc.get("derived_rules", {})
-    return set(derived.keys())
+    """适配v2.0 YAML结构"""
+    if "doc_generation" in spec:
+        doc = spec["doc_generation"]
+        derived = doc.get("derivations", {})
+        return set(derived.keys())
+    # 兜底旧版路径
+    if "sections" in spec and "doc_generation_spec" in spec["sections"]:
+        doc = spec["sections"]["doc_generation_spec"]
+        derived = doc.get("derived_rules", {})
+        return set(derived.keys())
+    return set()
 
 
 def _collect_yaml_titleblock_keys(spec: dict) -> set[str]:
-    doc = spec["sections"]["doc_generation_spec"]
-    fields = doc["objects"]["TitleblockFields"]["fields"]
-    return set(fields.keys())
+    """适配v2.0 YAML结构"""
+    if "doc_generation" in spec:
+        doc = spec["doc_generation"]
+        # v2.0中titleblock字段在frame_meta.titleblock下
+        frame_meta = doc.get("frame_meta", {})
+        titleblock = frame_meta.get("titleblock", {})
+        return set(titleblock.keys())
+    # 兜底旧版路径
+    if "sections" in spec and "doc_generation_spec" in spec["sections"]:
+        doc = spec["sections"]["doc_generation_spec"]
+        fields = doc["objects"]["TitleblockFields"]["fields"]
+        return set(fields.keys())
+    return set()
 
 
 def _extract_md_globaldocparams_table_keys(md: str) -> set[str]:
@@ -81,9 +112,19 @@ def main() -> int:
 
     md_only = sorted(md_key_like - yaml_all)
     # Ignore YAML deprecated fields (they may be intentionally omitted from MD)
-    doc = spec["sections"]["doc_generation_spec"]
-    gfields = doc["objects"]["GlobalDocParams"]["fields"]
-    deprecated = {k for k, v in gfields.items() if isinstance(v, dict) and v.get("deprecated") is True}
+    deprecated = set()
+    if "doc_generation" in spec:
+        doc = spec["doc_generation"]
+        params = doc.get("params", {})
+        for category in params.values():
+            if isinstance(category, dict):
+                for k, v in category.items():
+                    if isinstance(v, dict) and v.get("deprecated") is True:
+                        deprecated.add(k)
+    elif "sections" in spec and "doc_generation_spec" in spec["sections"]:
+        doc = spec["sections"]["doc_generation_spec"]
+        gfields = doc["objects"]["GlobalDocParams"]["fields"]
+        deprecated = {k for k, v in gfields.items() if isinstance(v, dict) and v.get("deprecated") is True}
 
     yaml_only_global = sorted((global_keys - deprecated) - md_key_like)
 
