@@ -69,7 +69,7 @@ doc_generation:
     enabled:        { type: bool, default: true,  desc: "文档生成总开关（true时全部生成）" }
     export_pdf:     { type: bool, default: true,  desc: "是否导出PDF（必须）" }
     pdf_engine:     { type: enum, default: "office_com", desc: "PDF引擎（含OLE时推荐office_com）" }
-    pdf_margin_mm:  { type: object, default: { top: 0, bottom: 0, left: 0, right: 0 }, desc: "DXF打印PDF页边距" }
+    pdf_margin_mm:  { type: object, default: { top: 20, bottom: 10, left: 20, right: 10 }, desc: "DXF→PDF 打印页边距（单位mm，指PDF页面边缘到图框最大外框线的距离）" }
 
   # --------------------------------------------------------------------------
   # 2.2 全局参数定义
