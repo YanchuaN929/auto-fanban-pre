@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
 class IODAConverter(ABC):
     """ODA 转换器接口 - DWG↔DXF 转换"""
-    
+
     @abstractmethod
     def dwg_to_dxf(self, dwg_path: Path, output_dir: Path) -> Path:
         """
@@ -47,7 +47,7 @@ class IODAConverter(ABC):
             ConversionError: 转换失败
         """
         ...
-    
+
     @abstractmethod
     def dxf_to_dwg(self, dxf_path: Path, output_dir: Path) -> Path:
         """
@@ -65,7 +65,7 @@ class IODAConverter(ABC):
 
 class IFrameDetector(ABC):
     """图框检测器接口 - 识别DXF中的图框"""
-    
+
     @abstractmethod
     def detect_frames(self, dxf_path: Path) -> list[FrameMeta]:
         """
@@ -87,7 +87,7 @@ class IFrameDetector(ABC):
 
 class ITitleblockExtractor(ABC):
     """图签提取器接口 - 从图框中提取字段"""
-    
+
     @abstractmethod
     def extract_fields(self, dxf_path: Path, frame: FrameMeta) -> FrameMeta:
         """
@@ -105,7 +105,7 @@ class ITitleblockExtractor(ABC):
 
 class IA4MultipageGrouper(ABC):
     """A4多页成组器接口 - 处理001说明图"""
-    
+
     @abstractmethod
     def group_a4_pages(self, frames: list[FrameMeta]) -> tuple[list[FrameMeta], list[SheetSet]]:
         """
@@ -122,12 +122,12 @@ class IA4MultipageGrouper(ABC):
 
 class IFrameSplitter(ABC):
     """图框拆分器接口 - 裁切输出子图"""
-    
+
     @abstractmethod
     def split_frame(
-        self, 
-        dxf_path: Path, 
-        frame: FrameMeta, 
+        self,
+        dxf_path: Path,
+        frame: FrameMeta,
         output_dir: Path
     ) -> tuple[Path, Path]:
         """
@@ -142,12 +142,12 @@ class IFrameSplitter(ABC):
             (PDF路径, DWG路径)
         """
         ...
-    
+
     @abstractmethod
     def split_sheet_set(
-        self, 
-        dxf_path: Path, 
-        sheet_set: SheetSet, 
+        self,
+        dxf_path: Path,
+        sheet_set: SheetSet,
         output_dir: Path
     ) -> tuple[Path, Path]:
         """
@@ -170,7 +170,7 @@ class IFrameSplitter(ABC):
 
 class ICoverGenerator(ABC):
     """封面生成器接口"""
-    
+
     @abstractmethod
     def generate(self, ctx: DocContext, output_dir: Path) -> tuple[Path, Path]:
         """
@@ -188,7 +188,7 @@ class ICoverGenerator(ABC):
 
 class ICatalogGenerator(ABC):
     """目录生成器接口"""
-    
+
     @abstractmethod
     def generate(self, ctx: DocContext, output_dir: Path) -> tuple[Path, Path, int]:
         """
@@ -206,7 +206,7 @@ class ICatalogGenerator(ABC):
 
 class IDesignFileGenerator(ABC):
     """设计文件生成器接口"""
-    
+
     @abstractmethod
     def generate(self, ctx: DocContext, output_dir: Path) -> tuple[Path, Path]:
         """
@@ -224,7 +224,7 @@ class IDesignFileGenerator(ABC):
 
 class IIEDGenerator(ABC):
     """IED计划生成器接口"""
-    
+
     @abstractmethod
     def generate(self, ctx: DocContext, output_dir: Path) -> Path:
         """
@@ -242,17 +242,17 @@ class IIEDGenerator(ABC):
 
 class IPDFExporter(ABC):
     """PDF导出器接口"""
-    
+
     @abstractmethod
     def export_docx_to_pdf(self, docx_path: Path, pdf_path: Path) -> None:
         """Word文档导出PDF"""
         ...
-    
+
     @abstractmethod
     def export_xlsx_to_pdf(self, xlsx_path: Path, pdf_path: Path) -> None:
         """Excel文档导出PDF"""
         ...
-    
+
     @abstractmethod
     def count_pdf_pages(self, pdf_path: Path) -> int:
         """计算PDF页数"""
@@ -265,9 +265,9 @@ class IPDFExporter(ABC):
 
 class IPipelineStage(Protocol):
     """流水线阶段协议"""
-    
+
     name: str
-    
+
     def execute(self, job: Job) -> None:
         """执行阶段"""
         ...
@@ -275,22 +275,22 @@ class IPipelineStage(Protocol):
 
 class IJobManager(ABC):
     """任务管理器接口"""
-    
+
     @abstractmethod
     def create_job(self, job_type: str, project_no: str, **kwargs: Any) -> Job:
         """创建任务"""
         ...
-    
+
     @abstractmethod
     def get_job(self, job_id: str) -> Job | None:
         """获取任务"""
         ...
-    
+
     @abstractmethod
     def update_job(self, job: Job) -> None:
         """更新任务状态"""
         ...
-    
+
     @abstractmethod
     def cancel_job(self, job_id: str) -> bool:
         """取消任务"""
@@ -299,7 +299,7 @@ class IJobManager(ABC):
 
 class IPackager(ABC):
     """打包器接口"""
-    
+
     @abstractmethod
     def package(self, job: Job) -> Path:
         """
@@ -312,7 +312,7 @@ class IPackager(ABC):
             package.zip 路径
         """
         ...
-    
+
     @abstractmethod
     def generate_manifest(self, job: Job) -> Path:
         """

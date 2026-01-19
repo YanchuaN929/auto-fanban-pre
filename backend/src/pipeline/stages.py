@@ -14,10 +14,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from pathlib import Path
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..models import Job
@@ -45,7 +45,7 @@ class PipelineStage:
     progress_start: int  # 进度起点（0-100）
     progress_end: int    # 进度终点
     handler: Callable[[Job], None] | None = None  # 执行函数
-    
+
     def execute(self, job: Job) -> None:
         """执行阶段"""
         if self.handler:

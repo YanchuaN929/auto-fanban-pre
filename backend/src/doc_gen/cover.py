@@ -35,54 +35,54 @@ if TYPE_CHECKING:
 
 class CoverGenerator(ICoverGenerator):
     """封面生成器实现"""
-    
+
     def __init__(
-        self, 
+        self,
         spec_path: str | None = None,
         pdf_exporter: PDFExporter | None = None,
     ):
         self.spec = load_spec(spec_path) if spec_path else load_spec()
         self.pdf_exporter = pdf_exporter or PDFExporter()
-    
+
     def generate(self, ctx: DocContext, output_dir: Path) -> tuple[Path, Path]:
         """生成封面文档"""
         output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # 1. 选择模板
         template_path = self._get_template_path(ctx)
         if not Path(template_path).exists():
             raise GenerationError(f"封面模板不存在: {template_path}")
-        
+
         # 2. 获取落点配置
         bindings = self.spec.get_cover_bindings(ctx.params.project_no)
-        
+
         # 3. 准备写入数据
         data = self._prepare_data(ctx)
-        
+
         # 4. 写入Word文档
         output_docx = output_dir / "封面.docx"
         self._write_cover(template_path, output_docx, bindings, data, ctx)
-        
+
         # 5. 导出PDF
         output_pdf = output_dir / "封面.pdf"
         self.pdf_exporter.export_docx_to_pdf(output_docx, output_pdf)
-        
+
         return output_docx, output_pdf
-    
+
     def _get_template_path(self, ctx: DocContext) -> str:
         """获取模板路径"""
         variant = ctx.params.cover_variant if ctx.params.cover_variant != "通用" else ""
         return self.spec.get_template_path(
-            "cover", 
-            ctx.params.project_no, 
+            "cover",
+            ctx.params.project_no,
             variant
         )
-    
+
     def _prepare_data(self, ctx: DocContext) -> dict:
         """准备写入数据"""
         params = ctx.params
         derived = ctx.derived
-        
+
         return {
             "engineering_no": params.engineering_no,
             "subitem_no": params.subitem_no,
@@ -100,10 +100,10 @@ class CoverGenerator(ICoverGenerator):
             "doc_status": params.doc_status,
             "cover_external_code": derived.cover_external_code,
         }
-    
+
     def _write_cover(
-        self, 
-        template_path: str, 
+        self,
+        template_path: str,
         output_path: Path,
         bindings: dict,
         data: dict,
@@ -112,11 +112,11 @@ class CoverGenerator(ICoverGenerator):
         """写入封面文档"""
         # TODO: 实现Word+内嵌Excel写入
         # 需要使用python-docx + oletools或COM自动化
-        
+
         # 暂时仅复制模板
         import shutil
         shutil.copy(template_path, output_path)
-        
+
         # 实际实现需要：
         # 1. 打开docx
         # 2. 找到内嵌的Excel OLE对象

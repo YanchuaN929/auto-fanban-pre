@@ -72,13 +72,13 @@ class LoggingConfig(BaseModel):
 
 class RuntimeConfig(BaseSettings):
     """运行期配置（支持环境变量覆盖）"""
-    
+
     # 基础路径
     base_dir: Path = Path(".")
     storage_dir: Path = Path("storage")
     spec_path: Path = Path("documents/参数规范.yaml")
     runtime_spec_path: Path = Path("documents/参数规范_运行期.yaml")
-    
+
     # 各子配置
     concurrency: ConcurrencyConfig = Field(default_factory=ConcurrencyConfig)
     timeouts: TimeoutConfig = Field(default_factory=TimeoutConfig)
@@ -88,25 +88,25 @@ class RuntimeConfig(BaseSettings):
     upload_limits: UploadLimitsConfig = Field(default_factory=UploadLimitsConfig)
     lifecycle: LifecycleConfig = Field(default_factory=LifecycleConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
-    
+
     model_config = {
         "env_prefix": "FANBAN_",
         "env_nested_delimiter": "__",
         "arbitrary_types_allowed": True,
     }
-    
+
     @classmethod
     def from_yaml(cls, yaml_path: str | Path) -> RuntimeConfig:
         """从YAML文件加载配置"""
         path = Path(yaml_path)
         if not path.exists():
             return cls()
-        
-        with open(path, "r", encoding="utf-8") as f:
+
+        with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
-        
+
         runtime_opts = data.get("runtime_options", {})
-        
+
         return cls(
             concurrency=ConcurrencyConfig(**cls._extract(runtime_opts, "concurrency")),
             timeouts=TimeoutConfig(**cls._extract(runtime_opts, "timeouts")),
@@ -117,7 +117,7 @@ class RuntimeConfig(BaseSettings):
             lifecycle=LifecycleConfig(**cls._extract(runtime_opts, "lifecycle")),
             logging=LoggingConfig(**cls._extract(runtime_opts, "logging")),
         )
-    
+
     @staticmethod
     def _extract(data: dict[str, Any], key: str) -> dict[str, Any]:
         """提取并展平配置"""
@@ -129,11 +129,11 @@ class RuntimeConfig(BaseSettings):
             elif not isinstance(v, dict):
                 result[k] = v
         return result
-    
+
     def get_job_dir(self, job_id: str) -> Path:
         """获取任务工作目录"""
         return self.storage_dir / "jobs" / job_id
-    
+
     def ensure_dirs(self) -> None:
         """确保必要目录存在"""
         self.storage_dir.mkdir(parents=True, exist_ok=True)

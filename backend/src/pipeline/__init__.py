@@ -8,10 +8,10 @@
 - packager: 打包与manifest生成
 """
 
-from .stages import PipelineStage, DELIVERABLE_STAGES
 from .executor import PipelineExecutor
 from .job_manager import JobManager
 from .packager import Packager
+from .stages import DELIVERABLE_STAGES, PipelineStage
 
 __all__ = [
     "PipelineStage",

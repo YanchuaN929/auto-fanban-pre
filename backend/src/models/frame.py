@@ -18,15 +18,15 @@ class BBox(BaseModel):
     ymin: float
     xmax: float
     ymax: float
-    
+
     @property
     def width(self) -> float:
         return self.xmax - self.xmin
-    
+
     @property
     def height(self) -> float:
         return self.ymax - self.ymin
-    
+
     def intersects(self, other: BBox) -> bool:
         """判断是否相交"""
         return not (
@@ -55,7 +55,7 @@ class TitleblockFields(BaseModel):
     revision: str | None = Field(None, description="版次")
     status: str | None = Field(None, description="状态")
     date: str | None = Field(None, description="日期")
-    
+
     def get_seq_no(self) -> int | None:
         """从internal_code提取尾号(如001)"""
         if self.internal_code and "-" in self.internal_code:
@@ -70,22 +70,22 @@ class FrameRuntime(BaseModel):
     frame_id: str = Field(..., description="图框实例唯一ID")
     source_file: Path = Field(..., description="来源DWG文件路径")
     outer_bbox: BBox = Field(..., description="外框边界")
-    
+
     # 纸张拟合结果
     paper_variant_id: str | None = Field(None, description="匹配的标准图幅ID")
     sx: float | None = Field(None, description="X方向缩放因子")
     sy: float | None = Field(None, description="Y方向缩放因子")
     geom_scale_factor: float | None = Field(None, description="几何缩放因子")
     roi_profile_id: str | None = Field(None, description="使用的ROI配置")
-    
+
     # 状态标记
     scale_mismatch: bool = False
     flags: list[str] = Field(default_factory=list)
-    
+
     # 输出路径
     pdf_path: Path | None = None
     dwg_path: Path | None = None
-    
+
     model_config = {"arbitrary_types_allowed": True}
 
 
@@ -93,18 +93,18 @@ class FrameMeta(BaseModel):
     """图框完整元数据（运行期+图签）"""
     runtime: FrameRuntime
     titleblock: TitleblockFields = Field(default_factory=TitleblockFields)
-    
+
     # 原始提取数据（用于调试）
     raw_extracts: dict[str, Any] = Field(default_factory=dict)
-    
+
     @property
     def frame_id(self) -> str:
         return self.runtime.frame_id
-    
+
     @property
     def internal_code(self) -> str | None:
         return self.titleblock.internal_code
-    
+
     def add_flag(self, flag: str) -> None:
         """添加告警标记"""
         if flag not in self.runtime.flags:

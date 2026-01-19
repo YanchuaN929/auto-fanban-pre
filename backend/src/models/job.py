@@ -51,51 +51,51 @@ class Job(BaseModel):
     job_id: str = Field(..., description="UUID")
     job_type: JobType
     project_no: str
-    
+
     # 输入
     input_files: list[Path] = Field(default_factory=list)
     options: dict[str, Any] = Field(default_factory=dict)
     params: dict[str, Any] = Field(default_factory=dict)
-    
+
     # 状态
     status: JobStatus = JobStatus.QUEUED
     progress: JobProgress = Field(default_factory=JobProgress)
-    
+
     # 产物
     artifacts: JobArtifacts = Field(default_factory=JobArtifacts)
-    
+
     # 结果
     flags: list[str] = Field(default_factory=list, description="告警标记")
     errors: list[str] = Field(default_factory=list, description="错误信息")
-    
+
     # 时间戳
     created_at: datetime = Field(default_factory=datetime.now)
     started_at: datetime | None = None
     finished_at: datetime | None = None
-    
+
     # 工作目录（运行时设置）
     work_dir: Path | None = None
-    
+
     model_config = {"arbitrary_types_allowed": True}
-    
+
     def mark_running(self, stage: str = "INGEST") -> None:
         """标记为运行中"""
         self.status = JobStatus.RUNNING
         self.started_at = datetime.now()
         self.progress.stage = stage
-        
+
     def mark_succeeded(self) -> None:
         """标记为成功"""
         self.status = JobStatus.SUCCEEDED
         self.finished_at = datetime.now()
         self.progress.percent = 100
-        
+
     def mark_failed(self, error: str) -> None:
         """标记为失败"""
         self.status = JobStatus.FAILED
         self.finished_at = datetime.now()
         self.errors.append(error)
-        
+
     def add_flag(self, flag: str) -> None:
         """添加告警标记（不中断）"""
         if flag not in self.flags:

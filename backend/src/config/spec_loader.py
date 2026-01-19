@@ -57,99 +57,99 @@ class CoverBinding(BaseModel):
 class BusinessSpec(BaseModel):
     """业务规范（参数规范.yaml 的结构化表示）"""
     schema_version: str
-    
+
     # 枚举定义
     enums: dict[str, Any] = Field(default_factory=dict)
-    
+
     # 文档生成模块配置
     doc_generation: dict[str, Any] = Field(default_factory=dict)
-    
+
     # 图签提取模块配置
     titleblock_extract: dict[str, Any] = Field(default_factory=dict)
-    
+
     # A4多页规则
     a4_multipage: dict[str, Any] = Field(default_factory=dict)
-    
+
     # === 便捷访问方法 ===
-    
+
     def get_paper_variants(self) -> dict[str, PaperVariant]:
         """获取标准图幅配置"""
         raw = self.titleblock_extract.get("paper_variants", {})
         return {k: PaperVariant(**v) for k, v in raw.items()}
-    
+
     def get_roi_profile(self, profile_id: str) -> ROIProfile | None:
         """获取ROI配置"""
         profiles = self.titleblock_extract.get("roi_profiles", {})
         if profile_id in profiles:
             return ROIProfile(**profiles[profile_id])
         return None
-    
+
     def get_field_definitions(self) -> dict[str, FieldDefinition]:
         """获取字段解析定义"""
         raw = self.titleblock_extract.get("field_definitions", {})
         return {k: FieldDefinition(**v) for k, v in raw.items()}
-    
+
     def get_cover_bindings(self, project_no: str) -> dict[str, CoverBinding]:
         """获取封面落点配置"""
         bindings = self.doc_generation.get("templates", {}).get("cover_bindings", {})
         key = "1818" if project_no == "1818" else "common"
         raw = bindings.get(key, {})
-        return {k: CoverBinding(**v) if isinstance(v, dict) else CoverBinding(cell=str(v)) 
+        return {k: CoverBinding(**v) if isinstance(v, dict) else CoverBinding(cell=str(v))
                 for k, v in raw.items() if not k.startswith("split_")}
-    
+
     def get_catalog_bindings(self) -> dict[str, Any]:
         """获取目录落点配置"""
         return self.doc_generation.get("templates", {}).get("catalog_bindings", {})
-    
+
     def get_design_bindings(self) -> dict[str, Any]:
         """获取设计文件落点配置"""
         return self.doc_generation.get("templates", {}).get("design_bindings", {})
-    
+
     def get_ied_bindings(self) -> dict[str, Any]:
         """获取IED计划落点配置"""
         return self.doc_generation.get("templates", {}).get("ied_bindings", {})
-    
+
     def get_derivation_rules(self) -> dict[str, Any]:
         """获取派生规则"""
         return self.doc_generation.get("derivations", {})
-    
+
     def get_mappings(self) -> dict[str, dict[str, str]]:
         """获取映射表"""
         return self.doc_generation.get("rules", {}).get("mappings", {})
-    
+
     def get_defaults(self) -> dict[str, Any]:
         """获取默认值"""
         return self.doc_generation.get("rules", {}).get("defaults", {})
-    
+
     def get_template_path(self, doc_type: str, project_no: str, variant: str = "") -> str:
         """获取模板路径"""
         selection = self.doc_generation.get("templates", {}).get("selection", {})
-        
+
         if doc_type == "cover":
             if project_no == "1818":
                 return selection.get("cover", {}).get("1818", "")
             template = selection.get("cover", {}).get("default", "")
             return template.replace("{variant}", variant)
-        
+
         if doc_type == "catalog":
             if project_no == "1818":
                 return selection.get("catalog", {}).get("1818", "")
             return selection.get("catalog", {}).get("default", "")
-        
+
         return selection.get(doc_type, "")
 
 
 class SpecLoader:
     """规范加载器（单例模式+缓存）"""
-    
+
     _instance: SpecLoader | None = None
     _spec: BusinessSpec | None = None
-    
+
     def __new__(cls) -> SpecLoader:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
-    
+
     @classmethod
     @lru_cache(maxsize=1)
     def load(cls, spec_path: str | Path = "documents/参数规范.yaml") -> BusinessSpec:
@@ -157,12 +157,12 @@ class SpecLoader:
         path = Path(spec_path)
         if not path.exists():
             raise FileNotFoundError(f"规范文件不存在: {path}")
-        
-        with open(path, "r", encoding="utf-8") as f:
+
+        with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
-        
+
         return BusinessSpec(**data)
-    
+
     @classmethod
     def reload(cls, spec_path: str | Path = "documents/参数规范.yaml") -> BusinessSpec:
         """强制重新加载（清除缓存）"""

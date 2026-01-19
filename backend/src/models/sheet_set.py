@@ -24,31 +24,31 @@ class SheetSet(BaseModel):
     sheet_set_type: str = "A4_MULTI_PAGE_001"
     paper: str = "A4"
     cluster_id: str
-    
+
     # 页数信息
     page_total: int
     pages: list[PageInfo] = Field(default_factory=list)
-    
+
     # Master页（第1页，有完整图签）
     master_page: PageInfo | None = None
-    
+
     # 告警标记
     flags: list[str] = Field(default_factory=list)
-    
+
     def get_inherited_titleblock(self) -> dict:
         """获取从Master继承的图签字段"""
         if self.master_page and self.master_page.frame_meta:
             return self.master_page.frame_meta.titleblock.model_dump(exclude_none=True)
         return {}
-    
+
     def validate_consistency(self) -> list[str]:
         """一致性校验，返回flags（不中断）"""
         new_flags = []
-        
+
         # 校验页数
         if len(self.pages) != self.page_total:
             new_flags.append("A4多页_页数不一致")
-        
+
         # 校验页码连续性
         indices = sorted(p.page_index for p in self.pages)
         expected = list(range(1, self.page_total + 1))
@@ -57,10 +57,10 @@ class SheetSet(BaseModel):
                 new_flags.append("A4多页_页码重复")
             else:
                 new_flags.append("A4多页_页码不连续")
-        
+
         # 校验Master页码
         if self.master_page and self.master_page.page_index != 1:
             new_flags.append("A4多页_首页页码异常")
-        
+
         self.flags.extend(new_flags)
         return new_flags

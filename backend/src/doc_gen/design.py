@@ -34,40 +34,40 @@ if TYPE_CHECKING:
 
 class DesignFileGenerator(IDesignFileGenerator):
     """设计文件生成器实现"""
-    
+
     def __init__(
-        self, 
+        self,
         spec_path: str | None = None,
         pdf_exporter: PDFExporter | None = None,
     ):
         self.spec = load_spec(spec_path) if spec_path else load_spec()
         self.pdf_exporter = pdf_exporter or PDFExporter()
-    
+
     def generate(self, ctx: DocContext, output_dir: Path) -> tuple[Path, Path]:
         """生成设计文件"""
         output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # 1. 获取模板路径
         template_path = self.spec.get_template_path("design", ctx.params.project_no)
         if not Path(template_path).exists():
             raise GenerationError(f"设计文件模板不存在: {template_path}")
-        
+
         # 2. 获取落点配置
         bindings = self.spec.get_design_bindings()
-        
+
         # 3. 写入Excel
         output_xlsx = output_dir / "设计文件.xlsx"
         self._write_design(template_path, output_xlsx, bindings, ctx)
-        
+
         # 4. 导出PDF
         output_pdf = output_dir / "设计文件.pdf"
         self.pdf_exporter.export_xlsx_to_pdf(output_xlsx, output_pdf)
-        
+
         return output_xlsx, output_pdf
-    
+
     def _write_design(
-        self, 
-        template_path: str, 
+        self,
+        template_path: str,
         output_path: Path,
         bindings: dict,
         ctx: DocContext,
@@ -75,34 +75,34 @@ class DesignFileGenerator(IDesignFileGenerator):
         """写入设计文件Excel"""
         wb = load_workbook(template_path)
         ws = wb.active
-        
+
         start_row = bindings.get("start_row", 2)
         columns = bindings.get("columns", {})
-        
+
         # 准备全局数据
         global_data = self._prepare_global_data(ctx)
-        
+
         # 行顺序：封面 → 目录 → 图纸
         rows = self._build_rows(ctx)
-        
+
         current_row = start_row
         for row_data in rows:
             self._write_row(ws, current_row, row_data, global_data, columns, ctx)
             current_row += 1
-        
+
         wb.save(output_path)
-    
+
     def _prepare_global_data(self, ctx: DocContext) -> dict:
         """准备全局数据（所有行相同）"""
         params = ctx.params
         derived = ctx.derived
         mappings = self.spec.get_mappings()
-        
+
         # 专业代码映射
         discipline_code = mappings.get("discipline_to_code", {}).get(
             params.discipline or "", ""
         )
-        
+
         return {
             "design_status": params.design_status,
             "wbs_code": params.wbs_code,
@@ -123,13 +123,13 @@ class DesignFileGenerator(IDesignFileGenerator):
             "qa_engineer": params.qa_engineer,
             "work_hours": params.work_hours,
         }
-    
+
     def _build_rows(self, ctx: DocContext) -> list[dict]:
         """构建行数据"""
         rows = []
         derived = ctx.derived
         params = ctx.params
-        
+
         # 封面行
         rows.append({
             "type": "cover",
@@ -142,7 +142,7 @@ class DesignFileGenerator(IDesignFileGenerator):
             "page_total": 1,
             "status": params.doc_status,
         })
-        
+
         # 目录行
         rows.append({
             "type": "catalog",
@@ -155,7 +155,7 @@ class DesignFileGenerator(IDesignFileGenerator):
             "page_total": derived.catalog_page_total or 1,
             "status": params.doc_status,
         })
-        
+
         # 图纸行
         for frame in ctx.get_sorted_frames():
             tb = frame.titleblock
@@ -170,14 +170,14 @@ class DesignFileGenerator(IDesignFileGenerator):
                 "page_total": tb.page_total or 1,
                 "status": tb.status,
             })
-        
+
         return rows
-    
+
     def _write_row(
-        self, 
-        ws, 
-        row: int, 
-        row_data: dict, 
+        self,
+        ws,
+        row: int,
+        row_data: dict,
         global_data: dict,
         columns: dict,
         ctx: DocContext,
@@ -187,7 +187,7 @@ class DesignFileGenerator(IDesignFileGenerator):
         for col_letter, col_config in columns.items():
             source = col_config.get("source", "")
             is_global = col_config.get("global", False)
-            
+
             # 确定值
             if is_global:
                 value = global_data.get(source, "")
@@ -195,6 +195,6 @@ class DesignFileGenerator(IDesignFileGenerator):
                 value = row_data[source]
             else:
                 value = ""
-            
+
             # 写入
             ws[f"{col_letter}{row}"] = value

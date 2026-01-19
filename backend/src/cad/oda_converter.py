@@ -27,22 +27,29 @@ from ..interfaces import ConversionError, IODAConverter
 
 class ODAConverter(IODAConverter):
     """ODA File Converter 封装"""
-    
+
     def __init__(self, exe_path: str | None = None, timeout: int | None = None):
         config = get_config()
         self.exe_path = Path(exe_path or config.oda.exe_path)
         self.timeout = timeout or config.timeouts.oda_convert_sec
-    
+        self.work_dir = Path(config.oda.work_dir) if config.oda.work_dir else None
+
+    def _ensure_exe(self) -> None:
+        if not self.exe_path or not self.exe_path.exists():
+            raise ConversionError(f"ODA可执行文件不存在: {self.exe_path}")
+        if self.work_dir:
+            self.work_dir.mkdir(parents=True, exist_ok=True)
+
     def dwg_to_dxf(self, dwg_path: Path, output_dir: Path) -> Path:
         """DWG 转 DXF"""
         if not dwg_path.exists():
             raise ConversionError(f"DWG文件不存在: {dwg_path}")
-        
+
+        self._ensure_exe()
+
         output_dir.mkdir(parents=True, exist_ok=True)
         output_path = output_dir / f"{dwg_path.stem}.dxf"
-        
-        # TODO: 实现ODA调用
-        # 示例命令: ODAFileConverter.exe <input_dir> <output_dir> ACAD2018 DXF
+
         cmd = [
             str(self.exe_path),
             str(dwg_path.parent),
@@ -53,34 +60,36 @@ class ODAConverter(IODAConverter):
             "1",  # Audit
             f"*.{dwg_path.suffix[1:]}",  # Filter
         ]
-        
+
         try:
-            result = subprocess.run(
+            subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
                 timeout=self.timeout,
                 check=True,
+                cwd=str(self.work_dir) if self.work_dir else None,
             )
         except subprocess.TimeoutExpired as e:
             raise ConversionError(f"ODA转换超时: {dwg_path}") from e
         except subprocess.CalledProcessError as e:
-            raise ConversionError(f"ODA转换失败: {e.stderr}") from e
-        
-        if not output_path.exists():
-            raise ConversionError(f"转换后文件不存在: {output_path}")
-        
+            detail = e.stderr or e.stdout or ""
+            raise ConversionError(f"ODA转换失败: {detail}") from e
+
+        output_path = self._resolve_output(output_dir, dwg_path.stem, ".dxf")
+
         return output_path
-    
+
     def dxf_to_dwg(self, dxf_path: Path, output_dir: Path) -> Path:
         """DXF 转 DWG"""
         if not dxf_path.exists():
             raise ConversionError(f"DXF文件不存在: {dxf_path}")
-        
+
+        self._ensure_exe()
+
         output_dir.mkdir(parents=True, exist_ok=True)
         output_path = output_dir / f"{dxf_path.stem}.dwg"
-        
-        # TODO: 实现ODA调用
+
         cmd = [
             str(self.exe_path),
             str(dxf_path.parent),
@@ -89,23 +98,34 @@ class ODAConverter(IODAConverter):
             "DWG",
             "0",
             "1",
-            f"*.dxf",
+            "*.dxf",
         ]
-        
+
         try:
-            result = subprocess.run(
+            subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
                 timeout=self.timeout,
                 check=True,
+                cwd=str(self.work_dir) if self.work_dir else None,
             )
         except subprocess.TimeoutExpired as e:
             raise ConversionError(f"ODA转换超时: {dxf_path}") from e
         except subprocess.CalledProcessError as e:
-            raise ConversionError(f"ODA转换失败: {e.stderr}") from e
-        
-        if not output_path.exists():
-            raise ConversionError(f"转换后文件不存在: {output_path}")
-        
+            detail = e.stderr or e.stdout or ""
+            raise ConversionError(f"ODA转换失败: {detail}") from e
+
+        output_path = self._resolve_output(output_dir, dxf_path.stem, ".dwg")
+
         return output_path
+
+    @staticmethod
+    def _resolve_output(output_dir: Path, stem: str, suffix: str) -> Path:
+        expected = output_dir / f"{stem}{suffix}"
+        if expected.exists():
+            return expected
+        for candidate in output_dir.glob(f"{stem}.*"):
+            if candidate.suffix.lower() == suffix:
+                return candidate
+        raise ConversionError(f"转换后文件不存在: {expected}")

@@ -24,115 +24,89 @@ import uuid
 from pathlib import Path
 
 import ezdxf
-from ezdxf.entities import LWPolyline, Polyline
 
 from ..config import load_spec
 from ..interfaces import DetectionError, IFrameDetector
 from ..models import BBox, FrameMeta, FrameRuntime
+from .detection import AnchorValidator, CandidateFinder, PaperFitter
 
 
 class FrameDetector(IFrameDetector):
     """图框检测器实现"""
-    
-    def __init__(self, spec_path: str | None = None):
+
+    def __init__(self, spec_path: str | None = None, min_frame_dim: float = 100.0):
         self.spec = load_spec(spec_path) if spec_path else load_spec()
         self.paper_variants = self.spec.get_paper_variants()
-    
+        outer_frame_cfg = self.spec.titleblock_extract.get("outer_frame", {})
+        acceptance_cfg = outer_frame_cfg.get("acceptance", {})
+        orthogonality_tol_deg = float(acceptance_cfg.get("orthogonality_tol_deg", 1.0))
+        self.max_candidates = (
+            acceptance_cfg.get("min_area_rank")
+            if isinstance(acceptance_cfg.get("min_area_rank"), int)
+            else None
+        )
+        base_profile = self.spec.get_roi_profile("BASE10")
+        coord_tol = base_profile.tolerance if base_profile else 0.5
+
+        scale_fit_cfg = self.spec.titleblock_extract.get("scale_fit", {})
+        self.paper_fitter = PaperFitter(
+            allow_rotation=bool(scale_fit_cfg.get("allow_rotation", True)),
+            uniform_scale_required=bool(scale_fit_cfg.get("uniform_scale_required", True)),
+            uniform_scale_tol=float(scale_fit_cfg.get("uniform_scale_tol", 0.02)),
+            error_metric=str(scale_fit_cfg.get("fit_error_metric", "max_rel_error(W,H)")),
+        )
+        self.candidate_finder = CandidateFinder(
+            min_dim=min_frame_dim,
+            coord_tol=coord_tol,
+            orthogonality_tol_deg=orthogonality_tol_deg,
+        )
+        self.anchor_validator = AnchorValidator(self.spec)
+
     def detect_frames(self, dxf_path: Path) -> list[FrameMeta]:
         """检测DXF中的所有图框"""
         if not dxf_path.exists():
             raise DetectionError(f"DXF文件不存在: {dxf_path}")
-        
+
         try:
             doc = ezdxf.readfile(str(dxf_path))
         except Exception as e:
             raise DetectionError(f"DXF解析失败: {e}") from e
-        
+
         msp = doc.modelspace()
-        
+
         # 1. 找到候选矩形
-        candidates = self._find_candidate_rectangles(msp)
-        
+        candidates = self.candidate_finder.find_rectangles(msp)
+        if self.max_candidates:
+            candidates = candidates[: self.max_candidates]
+
         # 2. 对每个候选进行验证和拟合
         frames = []
         for bbox in candidates:
-            frame = self._process_candidate(dxf_path, doc, bbox)
+            frame = self._process_candidate(dxf_path, msp, bbox)
             if frame:
                 frames.append(frame)
-        
+
         return frames
-    
-    def _find_candidate_rectangles(self, msp) -> list[BBox]:
-        """找到候选矩形（闭合polyline优先）"""
-        candidates = []
-        
-        # 优先检查闭合polyline
-        for entity in msp.query("LWPOLYLINE"):
-            if entity.closed:
-                bbox = self._get_polyline_bbox(entity)
-                if bbox and self._is_valid_frame_size(bbox):
-                    candidates.append(bbox)
-        
-        # 如果没找到，尝试LINE重建
-        if not candidates:
-            candidates = self._rebuild_from_lines(msp)
-        
-        # 按面积排序（大的在前）
-        candidates.sort(key=lambda b: b.width * b.height, reverse=True)
-        
-        return candidates
-    
-    def _get_polyline_bbox(self, entity: LWPolyline) -> BBox | None:
-        """获取polyline的边界框"""
-        try:
-            points = list(entity.get_points())
-            if len(points) < 4:
-                return None
-            
-            xs = [p[0] for p in points]
-            ys = [p[1] for p in points]
-            
-            return BBox(
-                xmin=min(xs),
-                ymin=min(ys),
-                xmax=max(xs),
-                ymax=max(ys),
-            )
-        except Exception:
-            return None
-    
-    def _rebuild_from_lines(self, msp) -> list[BBox]:
-        """从LINE实体重建矩形（兜底方案）"""
-        # TODO: 实现LINE重建逻辑
-        return []
-    
-    def _is_valid_frame_size(self, bbox: BBox) -> bool:
-        """检查是否为有效的图框尺寸"""
-        # 最小尺寸检查（避免小矩形）
-        min_dim = 100  # mm
-        if bbox.width < min_dim or bbox.height < min_dim:
-            return False
-        return True
-    
+
     def _process_candidate(
-        self, 
-        dxf_path: Path, 
-        doc, 
+        self,
+        dxf_path: Path,
+        msp,
         bbox: BBox
     ) -> FrameMeta | None:
-        """处理单个候选框：验证锚点、拟合纸张"""
-        
-        # 1. 锚点验证
-        if not self._verify_anchor(doc, bbox):
-            return None
-        
-        # 2. 纸张尺寸拟合
-        fit_result = self._fit_paper_size(bbox)
+        """处理单个候选框：拟合纸张、验证锚点"""
+
+        # 1. 纸张尺寸拟合
+        fit_result = self.paper_fitter.fit(bbox, self.paper_variants)
         if not fit_result:
             return None
-        
+
         paper_id, sx, sy, profile_id = fit_result
-        
+
+        # 2. 锚点验证（必须命中）
+        if not self.anchor_validator.validate(msp, bbox, sx, sy, profile_id):
+            return None
+
         # 3. 构建FrameMeta
         runtime = FrameRuntime(
             frame_id=str(uuid.uuid4()),
@@ -144,48 +118,5 @@ class FrameDetector(IFrameDetector):
             geom_scale_factor=(sx + sy) / 2,
             roi_profile_id=profile_id,
         )
-        
+
         return FrameMeta(runtime=runtime)
-    
-    def _verify_anchor(self, doc, bbox: BBox) -> bool:
-        """验证锚点ROI（CNPE/中国核电工程有限公司）"""
-        # TODO: 实现锚点验证逻辑
-        # 根据 spec.titleblock_extract.anchor 配置
-        return True  # 暂时跳过验证
-    
-    def _fit_paper_size(
-        self, 
-        bbox: BBox
-    ) -> tuple[str, float, float, str] | None:
-        """
-        拟合标准纸张尺寸
-        
-        Returns:
-            (paper_variant_id, sx, sy, roi_profile_id) or None
-        """
-        W_obs = bbox.width
-        H_obs = bbox.height
-        
-        best_match = None
-        best_error = float("inf")
-        
-        for variant_id, variant in self.paper_variants.items():
-            # 尝试正向匹配
-            sx = W_obs / variant.W
-            sy = H_obs / variant.H
-            error = abs(sx - sy) / max(sx, sy, 1e-9)
-            
-            if error < 0.02 and error < best_error:  # 2% 容差
-                best_error = error
-                best_match = (variant_id, sx, sy, variant.profile)
-            
-            # 尝试旋转匹配（W↔H）
-            sx_rot = W_obs / variant.H
-            sy_rot = H_obs / variant.W
-            error_rot = abs(sx_rot - sy_rot) / max(sx_rot, sy_rot, 1e-9)
-            
-            if error_rot < 0.02 and error_rot < best_error:
-                best_error = error_rot
-                best_match = (variant_id, sx_rot, sy_rot, variant.profile)
-        
-        return best_match

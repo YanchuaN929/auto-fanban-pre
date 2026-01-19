@@ -16,12 +16,12 @@ from .sheet_set import SheetSet
 
 class GlobalDocParams(BaseModel):
     """全局文档参数（前端输入+图签聚合+派生）"""
-    
+
     # === 项目级 ===
     project_no: str
     cover_variant: str = "通用"
     classification: str = "非密"
-    
+
     # === 图签提取的全局聚合值（来自001图纸） ===
     engineering_no: str | None = None
     subitem_no: str | None = None
@@ -30,18 +30,18 @@ class GlobalDocParams(BaseModel):
     discipline: str | None = None
     revision: str | None = None
     doc_status: str | None = None
-    
+
     # === 封面参数 ===
     album_title_cn: str | None = None
     album_title_en: str | None = None      # 仅1818
     cover_revision: str = "A"
-    
+
     # === 目录参数 ===
     upgrade_start_seq: int | None = None
     upgrade_end_seq: int | None = None
     upgrade_revision: str | None = None
     upgrade_note_text: str = "升版"
-    
+
     # === 设计文件参数 ===
     wbs_code: str | None = None
     system_code: str = "NA"
@@ -54,7 +54,7 @@ class GlobalDocParams(BaseModel):
     qa_required: str = "否"
     qa_engineer: str | None = None
     work_hours: str = "100"
-    
+
     # === IED参数（部分） ===
     ied_status: str = "发布"
     ied_doc_type: str | None = None
@@ -73,21 +73,21 @@ class DerivedFields(BaseModel):
     external_code_001: str | None = None
     cover_external_code: str | None = None
     catalog_external_code: str | None = None
-    
+
     # 标题派生
     cover_title_cn: str | None = None
     catalog_title_cn: str | None = None
     cover_title_en: str | None = None
     catalog_title_en: str | None = None
-    
+
     # 阶段派生
     design_phase: str | None = None
     design_phase_en: str | None = None     # 仅1818
     discipline_en: str | None = None       # 仅1818
-    
+
     # 版次派生
     catalog_revision: str | None = None
-    
+
     # 固定值
     cover_paper_size_text: str = "A4文件"
     cover_page_total: int = 1
@@ -97,37 +97,37 @@ class DerivedFields(BaseModel):
 
 class DocContext(BaseModel):
     """文档生成上下文（文档生成模块的唯一输入）"""
-    
+
     # 全局参数
     params: GlobalDocParams
-    
+
     # 派生字段
     derived: DerivedFields = Field(default_factory=DerivedFields)
-    
+
     # 图框列表（已排序）
     frames: list[FrameMeta] = Field(default_factory=list)
-    
+
     # A4多页成组（如有）
     sheet_sets: list[SheetSet] = Field(default_factory=list)
-    
+
     # 规则与映射（从YAML加载）
     rules: dict[str, Any] = Field(default_factory=dict)
     mappings: dict[str, dict[str, str]] = Field(default_factory=dict)
-    
+
     # 生成选项
     options: dict[str, Any] = Field(default_factory=dict)
-    
+
     @property
     def is_1818(self) -> bool:
         return self.params.project_no == "1818"
-    
+
     def get_frame_001(self) -> FrameMeta | None:
         """获取001图纸"""
         for frame in self.frames:
             if frame.titleblock.internal_code and frame.titleblock.internal_code.endswith("-001"):
                 return frame
         return None
-    
+
     def get_sorted_frames(self) -> list[FrameMeta]:
         """按internal_code尾号排序"""
         def sort_key(f: FrameMeta) -> int:
