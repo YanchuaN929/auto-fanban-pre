@@ -4,6 +4,7 @@
 # 本文件包含两个独立模块的参数规范：
 #   1. doc_generation    - 文档生成模块（封面/目录/设计文件/IED计划）
 #   2. titleblock_extract - 图签提取模块（DXF 解析/ROI 识别/字段解析）
+# 运行期参数（并发/超时/路径/清理策略）见：documents/参数规范_运行期.yaml
 # ============================================================================
 
 schema_version: "2.0"
@@ -293,7 +294,7 @@ doc_generation:
     cover_paper_size_text:   { value: "A4文件" }
     cover_page_total:        { value: 1 }
     catalog_paper_size_text: { value: "A4文件" }
-    catalog_page_total:      { from: "catalog_pdf", transform: "count_pdf_pages" }
+    catalog_page_total:      { from: "catalog_pdf", transform: "count_pdf_pages", note: "优先使用Excel分页信息计页；不稳定时回退为导出PDF计页" }
 
   # --------------------------------------------------------------------------
   # 2.4 规则与默认值
@@ -482,7 +483,7 @@ doc_generation:
         paper_size: "A4横向"
         scale: 94-95
         print_titles: "$1:$8"
-        page_count_method: "导出PDF后计页，回填H列再重新导出"
+        page_count_method: "优先使用Excel分页信息计页，回填H列后仅导出一次PDF；不稳定时回退为“导出PDF计页→回填→再导出”"
 
     # --- 设计文件落点（A~Z列） ---
     design_bindings:

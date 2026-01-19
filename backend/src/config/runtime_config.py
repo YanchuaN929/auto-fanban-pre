@@ -1,0 +1,160 @@
+"""
+运行期配置 - 读取 documents/参数规范_运行期.yaml
+
+职责：
+- 加载并发/超时/路径等运行参数
+- 提供环境变量覆盖机制
+- 类型安全的配置访问
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
+import yaml
+from pydantic import BaseModel, Field
+from pydantic_settings import BaseSettings
+
+
+class ConcurrencyConfig(BaseModel):
+    """并发配置"""
+    max_workers: int = 2
+    max_jobs: int = 4
+    max_queue: int = 20
+
+
+class TimeoutConfig(BaseModel):
+    """超时配置"""
+    oda_convert_sec: int = 600
+    office_export_sec: int = 300
+    pdf_export_sec: int = 300
+
+
+class RetryConfig(BaseModel):
+    """重试配置"""
+    max_retries: int = 2
+    retry_backoff_ms: int = 1000
+
+
+class ODAConfig(BaseModel):
+    """ODA转换器配置"""
+    exe_path: str = ""
+    work_dir: str | None = None
+
+
+class PDFEngineConfig(BaseModel):
+    """PDF引擎配置"""
+    preferred: str = "office_com"
+    fallback: str = "libreoffice"
+
+
+class UploadLimitsConfig(BaseModel):
+    """上传限制"""
+    max_files: int = 50
+    max_total_mb: int = 2048
+    allowed_exts: list[str] = Field(default_factory=lambda: [".dwg"])
+    min_free_disk_mb: int = 10240
+
+
+class LifecycleConfig(BaseModel):
+    """生命周期配置"""
+    retention_hours: int = 168
+    cleanup_on_cancel: bool = True
+    cleanup_cron: str = "0 3 * * *"
+
+
+class LoggingConfig(BaseModel):
+    """日志配置"""
+    log_level: str = "INFO"
+    log_to_file: bool = True
+
+
+class RuntimeConfig(BaseSettings):
+    """运行期配置（支持环境变量覆盖）"""
+    
+    # 基础路径
+    base_dir: Path = Path(".")
+    storage_dir: Path = Path("storage")
+    spec_path: Path = Path("documents/参数规范.yaml")
+    runtime_spec_path: Path = Path("documents/参数规范_运行期.yaml")
+    
+    # 各子配置
+    concurrency: ConcurrencyConfig = Field(default_factory=ConcurrencyConfig)
+    timeouts: TimeoutConfig = Field(default_factory=TimeoutConfig)
+    retries: RetryConfig = Field(default_factory=RetryConfig)
+    oda: ODAConfig = Field(default_factory=ODAConfig)
+    pdf_engine: PDFEngineConfig = Field(default_factory=PDFEngineConfig)
+    upload_limits: UploadLimitsConfig = Field(default_factory=UploadLimitsConfig)
+    lifecycle: LifecycleConfig = Field(default_factory=LifecycleConfig)
+    logging: LoggingConfig = Field(default_factory=LoggingConfig)
+    
+    model_config = {
+        "env_prefix": "FANBAN_",
+        "env_nested_delimiter": "__",
+        "arbitrary_types_allowed": True,
+    }
+    
+    @classmethod
+    def from_yaml(cls, yaml_path: str | Path) -> RuntimeConfig:
+        """从YAML文件加载配置"""
+        path = Path(yaml_path)
+        if not path.exists():
+            return cls()
+        
+        with open(path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+        
+        runtime_opts = data.get("runtime_options", {})
+        
+        return cls(
+            concurrency=ConcurrencyConfig(**cls._extract(runtime_opts, "concurrency")),
+            timeouts=TimeoutConfig(**cls._extract(runtime_opts, "timeouts")),
+            retries=RetryConfig(**cls._extract(runtime_opts, "retries")),
+            oda=ODAConfig(**cls._extract(runtime_opts, "oda_converter")),
+            pdf_engine=PDFEngineConfig(**cls._extract(runtime_opts, "pdf_engine")),
+            upload_limits=UploadLimitsConfig(**cls._extract(runtime_opts, "upload_limits")),
+            lifecycle=LifecycleConfig(**cls._extract(runtime_opts, "lifecycle")),
+            logging=LoggingConfig(**cls._extract(runtime_opts, "logging")),
+        )
+    
+    @staticmethod
+    def _extract(data: dict[str, Any], key: str) -> dict[str, Any]:
+        """提取并展平配置"""
+        section = data.get(key, {})
+        result = {}
+        for k, v in section.items():
+            if isinstance(v, dict) and "default" in v:
+                result[k] = v["default"]
+            elif not isinstance(v, dict):
+                result[k] = v
+        return result
+    
+    def get_job_dir(self, job_id: str) -> Path:
+        """获取任务工作目录"""
+        return self.storage_dir / "jobs" / job_id
+    
+    def ensure_dirs(self) -> None:
+        """确保必要目录存在"""
+        self.storage_dir.mkdir(parents=True, exist_ok=True)
+        (self.storage_dir / "jobs").mkdir(exist_ok=True)
+
+
+# 全局配置实例
+_config: RuntimeConfig | None = None
+
+
+def get_config() -> RuntimeConfig:
+    """获取全局配置（惰性加载）"""
+    global _config
+    if _config is None:
+        _config = RuntimeConfig.from_yaml("documents/参数规范_运行期.yaml")
+    return _config
+
+
+def reload_config(yaml_path: str | Path | None = None) -> RuntimeConfig:
+    """重新加载配置"""
+    global _config
+    path = yaml_path or "documents/参数规范_运行期.yaml"
+    _config = RuntimeConfig.from_yaml(path)
+    return _config

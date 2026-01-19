@@ -1,5 +1,6 @@
 """
 用 Excel COM(通过 comtypes) 导出目录PDF并统计页数，用于验证目录页数算法。
+优先使用 Excel 分页信息计页，必要时回退为“导出PDF计页→回填→再导出”。
 
 本脚本按“真实写入流程”模拟目录明细：
 - 明细从第9行开始
@@ -20,6 +21,7 @@ import sys
 import uuid
 from pathlib import Path
 import re
+from typing import Optional
 
 import comtypes.client  # type: ignore
 try:
@@ -161,6 +163,25 @@ def _fill_catalog_entries(
     return last_row
 
 
+def _count_pages_by_pagebreaks(ws) -> Optional[int]:
+    """
+    Try to compute page count from Excel page breaks.
+    Returns None if page breaks are not available/stable.
+    """
+    try:
+        # Trigger Excel to calculate page breaks.
+        ws.DisplayPageBreaks = True
+    except Exception:
+        pass
+    try:
+        h = int(ws.HPageBreaks.Count)
+        v = int(ws.VPageBreaks.Count)
+    except Exception:
+        return None
+    # total pages = (horizontal breaks + 1) * (vertical breaks + 1)
+    return max(1, (h + 1) * (v + 1))
+
+
 def export_catalog_pdf_and_count_pages(kind: str, *, project_no: str, n_dwg: int, out_dir: Path) -> tuple[Path, int]:
     template = _resolve_template(kind)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -190,16 +211,35 @@ def export_catalog_pdf_and_count_pages(kind: str, *, project_no: str, n_dwg: int
         ws.PageSetup.PrintArea = f"$A$1:$I${last_row}"
 
         # 目录页数计算与回填（目录行=第2条，对应start_row+1的H列）
-        # 流程：先导出PDF计页 -> 回填H列 -> 再导出一次PDF，确保最终PDF与xlsx一致。
-        # xlTypePDF = 0
-        ws.ExportAsFixedFormat(0, str(pdf_path.resolve()))
-        pages = count_pdf_pages(pdf_path)
-        try:
-            # H列=8；catalog row is the 2nd entry -> start_row+1
-            ws.Cells(start_row + 1, 8).Value2 = pages
-        except Exception:
-            pass
-        ws.ExportAsFixedFormat(0, str(pdf_path.resolve()))
+        # 优先：用分页信息计页 -> 回填H列 -> 仅导出一次最终PDF
+        # 兜底：若分页信息不稳定/不可用，回退为“导出PDF计页→回填→再导出”
+        pages = _count_pages_by_pagebreaks(ws)
+        if pages is not None:
+            try:
+                # H列=8；catalog row is the 2nd entry -> start_row+1
+                ws.Cells(start_row + 1, 8).Value2 = pages
+            except Exception:
+                pass
+            # xlTypePDF = 0
+            ws.ExportAsFixedFormat(0, str(pdf_path.resolve()))
+            # If the actual PDF page count differs, align H and re-export once.
+            pdf_pages = count_pdf_pages(pdf_path)
+            if pdf_pages != pages:
+                try:
+                    ws.Cells(start_row + 1, 8).Value2 = pdf_pages
+                except Exception:
+                    pass
+                ws.ExportAsFixedFormat(0, str(pdf_path.resolve()))
+                pages = pdf_pages
+        else:
+            # fallback: double export
+            ws.ExportAsFixedFormat(0, str(pdf_path.resolve()))
+            pages = count_pdf_pages(pdf_path)
+            try:
+                ws.Cells(start_row + 1, 8).Value2 = pages
+            except Exception:
+                pass
+            ws.ExportAsFixedFormat(0, str(pdf_path.resolve()))
 
     finally:
         try:
