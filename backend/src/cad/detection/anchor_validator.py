@@ -69,9 +69,7 @@ class AnchorValidator:
 
         return False
 
-    def _restore_roi(
-        self, outer_bbox: BBox, rb_offset: list[float], sx: float, sy: float
-    ) -> BBox:
+    def _restore_roi(self, outer_bbox: BBox, rb_offset: list[float], sx: float, sy: float) -> BBox:
         """根据rb_offset还原ROI的绝对坐标（含缩放）"""
         dx_right, dx_left, dy_bottom, dy_top = rb_offset
         return BBox(

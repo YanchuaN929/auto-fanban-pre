@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 import math
-from typing import Iterable
+from collections.abc import Iterable
 
 from ...models import BBox
 
@@ -195,9 +195,7 @@ class CandidateFinder:
             merged[coord] = intervals
         return merged
 
-    def _merge_intervals(
-        self, segments: list[tuple[float, float]]
-    ) -> list[tuple[float, float]]:
+    def _merge_intervals(self, segments: list[tuple[float, float]]) -> list[tuple[float, float]]:
         if not segments:
             return []
         sorted_segments = sorted((min(a, b), max(a, b)) for a, b in segments)
@@ -209,9 +207,7 @@ class CandidateFinder:
                 merged.append([start, end])
         return [(seg[0], seg[1]) for seg in merged]
 
-    def _has_edge(
-        self, intervals: list[tuple[float, float]], start: float, end: float
-    ) -> bool:
+    def _has_edge(self, intervals: list[tuple[float, float]], start: float, end: float) -> bool:
         for seg_start, seg_end in intervals:
             if seg_start <= start + self.coord_tol and seg_end >= end - self.coord_tol:
                 return True

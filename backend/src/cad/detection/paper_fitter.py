@@ -50,11 +50,12 @@ class PaperFitter:
         best_error = float("inf")
 
         for variant_id, variant in paper_variants.items():
-            if hasattr(variant, "W"):
-                W_std = getattr(variant, "W")
-                H_std = getattr(variant, "H")
-                profile = getattr(variant, "profile")
-            else:
+            # 统一处理：优先尝试属性访问，失败则尝试字典访问
+            try:
+                W_std = variant.W  # type: ignore[union-attr]
+                H_std = variant.H  # type: ignore[union-attr]
+                profile = variant.profile  # type: ignore[union-attr]
+            except AttributeError:
                 W_std = variant.get("W")  # type: ignore[union-attr]
                 H_std = variant.get("H")  # type: ignore[union-attr]
                 profile = variant.get("profile")  # type: ignore[union-attr]

@@ -88,12 +88,7 @@ class FrameDetector(IFrameDetector):
 
         return frames
 
-    def _process_candidate(
-        self,
-        dxf_path: Path,
-        msp,
-        bbox: BBox
-    ) -> FrameMeta | None:
+    def _process_candidate(self, dxf_path: Path, msp, bbox: BBox) -> FrameMeta | None:
         """处理单个候选框：拟合纸张、验证锚点"""
 
         # 1. 纸张尺寸拟合
