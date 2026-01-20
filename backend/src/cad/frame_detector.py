@@ -20,15 +20,14 @@
 
 from __future__ import annotations
 
-import uuid
 from pathlib import Path
 
 import ezdxf
 
 from ..config import load_spec
 from ..interfaces import DetectionError, IFrameDetector
-from ..models import BBox, FrameMeta, FrameRuntime
-from .detection import AnchorValidator, CandidateFinder, PaperFitter
+from ..models import FrameMeta
+from .detection import AnchorFirstLocator, CandidateFinder, PaperFitter
 
 
 class FrameDetector(IFrameDetector):
@@ -60,7 +59,12 @@ class FrameDetector(IFrameDetector):
             coord_tol=coord_tol,
             orthogonality_tol_deg=orthogonality_tol_deg,
         )
-        self.anchor_validator = AnchorValidator(self.spec)
+        self.anchor_locator = AnchorFirstLocator(
+            self.spec,
+            self.candidate_finder,
+            self.paper_fitter,
+            max_candidates=self.max_candidates,
+        )
 
     def detect_frames(self, dxf_path: Path) -> list[FrameMeta]:
         """检测DXF中的所有图框"""
@@ -74,44 +78,4 @@ class FrameDetector(IFrameDetector):
 
         msp = doc.modelspace()
 
-        # 1. 找到候选矩形
-        candidates = self.candidate_finder.find_rectangles(msp)
-        if self.max_candidates:
-            candidates = candidates[: self.max_candidates]
-
-        # 2. 对每个候选进行验证和拟合
-        frames = []
-        for bbox in candidates:
-            frame = self._process_candidate(dxf_path, msp, bbox)
-            if frame:
-                frames.append(frame)
-
-        return frames
-
-    def _process_candidate(self, dxf_path: Path, msp, bbox: BBox) -> FrameMeta | None:
-        """处理单个候选框：拟合纸张、验证锚点"""
-
-        # 1. 纸张尺寸拟合
-        fit_result = self.paper_fitter.fit(bbox, self.paper_variants)
-        if not fit_result:
-            return None
-
-        paper_id, sx, sy, profile_id = fit_result
-
-        # 2. 锚点验证（必须命中）
-        if not self.anchor_validator.validate(msp, bbox, sx, sy, profile_id):
-            return None
-
-        # 3. 构建FrameMeta
-        runtime = FrameRuntime(
-            frame_id=str(uuid.uuid4()),
-            source_file=dxf_path,
-            outer_bbox=bbox,
-            paper_variant_id=paper_id,
-            sx=sx,
-            sy=sy,
-            geom_scale_factor=(sx + sy) / 2,
-            roi_profile_id=profile_id,
-        )
-
-        return FrameMeta(runtime=runtime)
+        return self.anchor_locator.locate_frames(msp, dxf_path)

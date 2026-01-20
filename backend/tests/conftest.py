@@ -10,16 +10,16 @@ from __future__ import annotations
 
 import tempfile
 import uuid
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import pytest
 
 from src.config import BusinessSpec, RuntimeConfig, SpecLoader
 from src.models import (
     BBox,
-    DocContext,
     DerivedFields,
+    DocContext,
     FrameMeta,
     FrameRuntime,
     GlobalDocParams,
@@ -27,7 +27,6 @@ from src.models import (
     JobType,
     TitleblockFields,
 )
-
 
 # ============================================================================
 # 配置 Fixtures
@@ -152,7 +151,7 @@ def sample_global_params() -> GlobalDocParams:
 
 @pytest.fixture
 def sample_doc_context(
-    sample_frame: FrameMeta, 
+    sample_frame: FrameMeta,
     sample_global_params: GlobalDocParams
 ) -> DocContext:
     """示例文档上下文"""
@@ -169,14 +168,14 @@ def sample_doc_context(
 # ============================================================================
 
 @pytest.fixture
-def temp_job() -> Generator[Job, None, None]:
+def temp_job() -> Generator[Job]:
     """临时任务（自动清理）"""
     job = Job(
         job_id=str(uuid.uuid4()),
         job_type=JobType.DELIVERABLE,
         project_no="2016",
     )
-    
+
     # 创建临时工作目录
     with tempfile.TemporaryDirectory() as tmpdir:
         job.work_dir = Path(tmpdir)
@@ -188,7 +187,7 @@ def temp_job() -> Generator[Job, None, None]:
 # ============================================================================
 
 @pytest.fixture
-def temp_dir() -> Generator[Path, None, None]:
+def temp_dir() -> Generator[Path]:
     """临时目录"""
     with tempfile.TemporaryDirectory() as tmpdir:
         yield Path(tmpdir)

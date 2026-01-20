@@ -38,10 +38,7 @@ class A4MultipageGrouper(IA4MultipageGrouper):
         self.spec = load_spec(spec_path) if spec_path else load_spec()
         self.a4_config = self.spec.a4_multipage
 
-    def group_a4_pages(
-        self,
-        frames: list[FrameMeta]
-    ) -> tuple[list[FrameMeta], list[SheetSet]]:
+    def group_a4_pages(self, frames: list[FrameMeta]) -> tuple[list[FrameMeta], list[SheetSet]]:
         """对A4图框进行成组处理"""
 
         # 1. 分离A4和非A4图框
@@ -76,10 +73,7 @@ class A4MultipageGrouper(IA4MultipageGrouper):
                     processed_frame_ids.add(frame.frame_id)
 
         # 5. 返回未成组的图框 + 成组结果
-        remaining_frames = [
-            f for f in frames
-            if f.frame_id not in processed_frame_ids
-        ]
+        remaining_frames = [f for f in frames if f.frame_id not in processed_frame_ids]
 
         return remaining_frames, sheet_sets
 
@@ -91,15 +85,15 @@ class A4MultipageGrouper(IA4MultipageGrouper):
     def _build_clusters(self, a4_frames: list[FrameMeta]) -> list[list[FrameMeta]]:
         """
         构建A4簇（按间距连边取连通分量）
-        
+
         gap_threshold = 0.5 * min(W_obs, H_obs)
         """
         if not a4_frames:
             return []
 
-        # 计算间距阈值
-        first_bbox = a4_frames[0].runtime.outer_bbox
-        gap_threshold = 0.5 * min(first_bbox.width, first_bbox.height)
+        # 计算间距阈值系数
+        cluster_cfg = self.a4_config.get("cluster_building", {})
+        gap_factor = float(cluster_cfg.get("gap_threshold_factor", 0.5))
 
         # 构建邻接关系
         n = len(a4_frames)
@@ -107,9 +101,7 @@ class A4MultipageGrouper(IA4MultipageGrouper):
 
         for i in range(n):
             for j in range(i + 1, n):
-                if self._frames_are_neighbors(
-                    a4_frames[i], a4_frames[j], gap_threshold
-                ):
+                if self._frames_are_neighbors(a4_frames[i], a4_frames[j], gap_factor):
                     adj[i].append(j)
                     adj[j].append(i)
 
@@ -125,17 +117,14 @@ class A4MultipageGrouper(IA4MultipageGrouper):
 
         return clusters
 
-    def _frames_are_neighbors(
-        self,
-        f1: FrameMeta,
-        f2: FrameMeta,
-        threshold: float
-    ) -> bool:
+    def _frames_are_neighbors(self, f1: FrameMeta, f2: FrameMeta, gap_factor: float) -> bool:
         """判断两个图框是否相邻"""
         b1 = f1.runtime.outer_bbox
         b2 = f2.runtime.outer_bbox
 
         # 计算最小间距
+        min_size = min(b1.width, b1.height, b2.width, b2.height)
+        threshold = gap_factor * min_size
         dx = max(0, max(b1.xmin, b2.xmin) - min(b1.xmax, b2.xmax))
         dy = max(0, max(b1.ymin, b2.ymin) - min(b1.ymax, b2.ymax))
 
@@ -147,7 +136,7 @@ class A4MultipageGrouper(IA4MultipageGrouper):
         adj: list[list[int]],
         visited: list[bool],
         frames: list[FrameMeta],
-        cluster: list[FrameMeta]
+        cluster: list[FrameMeta],
     ) -> None:
         """深度优先搜索"""
         visited[node] = True
@@ -173,12 +162,14 @@ class A4MultipageGrouper(IA4MultipageGrouper):
             is_master = frame.frame_id == master.frame_id
             page_index = frame.titleblock.page_index or (1 if is_master else 0)
 
-            pages.append(PageInfo(
-                page_index=page_index,
-                outer_bbox=frame.runtime.outer_bbox,
-                has_titleblock=is_master,
-                frame_meta=frame if is_master else None,
-            ))
+            pages.append(
+                PageInfo(
+                    page_index=page_index,
+                    outer_bbox=frame.runtime.outer_bbox,
+                    has_titleblock=is_master,
+                    frame_meta=frame if is_master else None,
+                )
+            )
 
         # 4. 按页码排序
         pages.sort(key=lambda p: p.page_index)

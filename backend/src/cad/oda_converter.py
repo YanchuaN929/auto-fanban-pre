@@ -35,8 +35,8 @@ class ODAConverter(IODAConverter):
         self.work_dir = Path(config.oda.work_dir) if config.oda.work_dir else None
 
     def _ensure_exe(self) -> None:
-        if not self.exe_path or not self.exe_path.exists():
-            raise ConversionError(f"ODA可执行文件不存在: {self.exe_path}")
+        if not self.exe_path or not self.exe_path.exists() or not self.exe_path.is_file():
+            raise ConversionError(f"ODA可执行文件不存在或未配置: {self.exe_path}")
         if self.work_dir:
             self.work_dir.mkdir(parents=True, exist_ok=True)
 

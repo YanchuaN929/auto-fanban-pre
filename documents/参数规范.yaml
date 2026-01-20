@@ -215,7 +215,7 @@ doc_generation:
       ied_checked_by:            { type: str,  required_when: "ied_status == '发布'", source: frontend, format: "姓名@ID",    desc: "校核者(BB列)" }
       ied_checked_date:          { type: str,  required_when: "ied_status == '发布'", source: frontend, format: "YYYY-MM-DD", desc: "校核日期(BC列)" }
       ied_discipline_leader:     { type: str,  required_when: "ied_status == '发布'", source: frontend, format: "姓名@ID",    desc: "工种负责人(BD列)" }
-      ied_discipline_leader_date:{ type: str,  required_when: "ied_status == '发布'", source: frontend, format: "YYYY-MM-DD", desc: "工种负责人审核日期(BE列)" }
+      ied_discipline_leader_date: { type: str,  required_when: "ied_status == '发布'", source: frontend, format: "YYYY-MM-DD", desc: "工种负责人审核日期(BE列)" }
       ied_reviewed_by:           { type: str,  required_when: "ied_status == '发布'", source: frontend, format: "姓名@ID",    desc: "审核者(BF列)" }
       ied_reviewed_date:         { type: str,  required_when: "ied_status == '发布'", source: frontend, format: "YYYY-MM-DD", desc: "审核日期(BG列)" }
       ied_approved_by:           { type: str,  required_when: "ied_status == '发布'", source: frontend, format: "姓名@ID",    desc: "审定者(BH列)" }
@@ -662,7 +662,7 @@ titleblock_extract:
   pipeline:
     - { step: 1, name: "dwg_to_dxf",     desc: "DWG转DXF(ODA File Converter)" }
     - { step: 2, name: "frame_detect",   desc: "图框候选检测(闭合矩形/LINE重建)" }
-    - { step: 3, name: "frame_verify",   desc: "锚点ROI验证(CNPE/中国核电工程有限公司)" }
+    - { step: 3, name: "frame_verify",   desc: "锚点ROI验证(本文件产权属中国核电工程有限公司（CNPE）所有，未经书面许可，不得以任何方式复制、传播、发表和外传。)" }
     - { step: 4, name: "scale_check",    desc: "比例一致性检查(几何缩放vs图签比例)" }
     - { step: 5, name: "field_extract",  desc: "字段ROI提取与解析" }
 
@@ -733,7 +733,6 @@ titleblock_extract:
   # 3.6 ROI Profile 定义
   # --------------------------------------------------------------------------
   # rb_offset 格式: [dx_right, dx_left, dy_bottom, dy_top]
-  # rb_offset 格式: [dx_right, dx_left, dy_bottom, dy_top]
   roi_profiles:
     BASE10:
       description: "大图幅标准版图签(dx_right≈10)"
@@ -753,7 +752,7 @@ titleblock_extract:
         版次:       [178.2, 190.0, 118.0, 141.8]
         状态:       [144.2, 160.2, 118.0, 141.8]
         日期:       [160.2, 178.2, 118.0, 141.8]
-        锚点:       [10.0,  190.0, 52.0, 68.0]
+        锚点:       [10.0,  190.0, 68.0, 84.0]
 
     SMALL5:
       description: "小图幅紧凑版图签(A3/A4，dx_right≈5)"
@@ -856,9 +855,12 @@ titleblock_extract:
   # 3.8 锚点检测配置
   # --------------------------------------------------------------------------
   anchor:
-    search_text: ["CNPE", "中国核电工程有限公司"]
+    search_text: ["本文件产权属中国核电工程有限公司（CNPE）所有，未经书面许可，不得以任何方式复制、传播、发表和外传。"]
     profile_priority: [BASE10, SMALL5]
-    match_policy: "any_hit_accept"
+    match_policy: "double_hit_same_roi"
+    primary_text: "本文件产权属中国核电工程有限公司（CNPE）所有，未经书面许可，不得以任何方式复制、传播、发表和外传。"
+    secondary_text: "CNPE"
+    roi_field_name: "锚点"
 
   # --------------------------------------------------------------------------
   # 3.9 容差配置
@@ -919,7 +921,8 @@ a4_multipage:
 
   cluster_building:
     desc: "把同一DXF中所有A4外框作为节点，按间距连边，取连通分量"
-    gap_threshold_formula: "0.5 * min(W_obs, H_obs)"
+    gap_threshold_formula: "gap_threshold_factor * min(W_obs, H_obs)"
+    gap_threshold_factor: 1.0
     edge_rule: "min_dx < gap_threshold AND min_dy < gap_threshold"
 
   # --------------------------------------------------------------------------
@@ -927,7 +930,7 @@ a4_multipage:
   # --------------------------------------------------------------------------
   master_page:
     detection:
-      - "锚点ROI命中(CNPE/中国核电工程有限公司)"
+      - "锚点ROI命中(本文件产权属中国核电工程有限公司（CNPE）所有，未经书面许可，不得以任何方式复制、传播、发表和外传。)"
       - "关键字段命中数≥3(工程号/内部编码/外部编码/张数)"
     selection_priority:
       - "字段命中数量最多"
@@ -982,7 +985,7 @@ a4_multipage:
     - { check: "页码不连续(如1,2,4缺3)",          flag: "A4多页_页码不连续" }
     - { check: "Slave的page_total与Master不一致", flag: "A4多页_页总数冲突" }
     - { check: "page_index_master != 1",          flag: "A4多页_首页页码异常" }
-    policy: "不中断运行，继续裁切输出"
+  policy: "不中断运行，继续裁切输出"
 
   # --------------------------------------------------------------------------
   # 4.7 裁切输出

@@ -7,11 +7,13 @@
 - paper_fitter: 拟合标准纸张尺寸
 """
 
+from .anchor_first_locator import AnchorFirstLocator
 from .anchor_validator import AnchorValidator
 from .candidate_finder import CandidateFinder
 from .paper_fitter import PaperFitter
 
 __all__ = [
+    "AnchorFirstLocator",
     "CandidateFinder",
     "AnchorValidator",
     "PaperFitter",
