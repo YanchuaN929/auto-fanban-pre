@@ -107,7 +107,7 @@ class RuntimeConfig(BaseSettings):
 
         runtime_opts = data.get("runtime_options", {})
 
-        return cls(
+        config = cls(
             concurrency=ConcurrencyConfig(**cls._extract(runtime_opts, "concurrency")),
             timeouts=TimeoutConfig(**cls._extract(runtime_opts, "timeouts")),
             retries=RetryConfig(**cls._extract(runtime_opts, "retries")),
@@ -117,6 +117,9 @@ class RuntimeConfig(BaseSettings):
             lifecycle=LifecycleConfig(**cls._extract(runtime_opts, "lifecycle")),
             logging=LoggingConfig(**cls._extract(runtime_opts, "logging")),
         )
+
+        config._resolve_paths(base_dir=path.parent)
+        return config
 
     @staticmethod
     def _extract(data: dict[str, Any], key: str) -> dict[str, Any]:
@@ -129,6 +132,17 @@ class RuntimeConfig(BaseSettings):
             elif not isinstance(v, dict):
                 result[k] = v
         return result
+
+    def _resolve_paths(self, base_dir: Path) -> None:
+        """解析相对路径配置为绝对路径（基于配置文件所在目录）"""
+        if self.oda.exe_path:
+            exe_path = Path(self.oda.exe_path)
+            if not exe_path.is_absolute():
+                self.oda.exe_path = str((base_dir / exe_path).resolve())
+        if self.oda.work_dir:
+            work_dir = Path(self.oda.work_dir)
+            if not work_dir.is_absolute():
+                self.oda.work_dir = str((base_dir / work_dir).resolve())
 
     def get_job_dir(self, job_id: str) -> Path:
         """获取任务工作目录"""
@@ -148,7 +162,12 @@ def get_config() -> RuntimeConfig:
     """获取全局配置（惰性加载）"""
     global _config
     if _config is None:
-        _config = RuntimeConfig.from_yaml("documents/参数规范_运行期.yaml")
+        default_path = Path("documents/参数规范_运行期.yaml")
+        if not default_path.exists():
+            fallback_path = Path("config/参数规范_运行期.yaml")
+            if fallback_path.exists():
+                default_path = fallback_path
+        _config = RuntimeConfig.from_yaml(default_path)
     return _config
 
 

@@ -43,11 +43,25 @@ class PaperFitter:
         Returns:
             (paper_variant_id, sx, sy, roi_profile_id) or None
         """
-        W_obs = bbox.width
-        H_obs = bbox.height
-
         best_match = None
         best_error = float("inf")
+
+        for variant_id, sx, sy, profile, error in self.fit_all(bbox, paper_variants):
+            if error < best_error:
+                best_error = error
+                best_match = (variant_id, sx, sy, profile)
+
+        return best_match
+
+    def fit_all(
+        self,
+        bbox: BBox,
+        paper_variants: dict[str, object],
+    ) -> list[tuple[str, float, float, str, float]]:
+        """返回所有满足拟合条件的候选"""
+        W_obs = bbox.width
+        H_obs = bbox.height
+        results: list[tuple[str, float, float, str, float]] = []
 
         for variant_id, variant in paper_variants.items():
             # 统一处理：优先尝试属性访问，失败则尝试字典访问
@@ -66,19 +80,15 @@ class PaperFitter:
             candidate = self._evaluate_variant(W_obs, H_obs, W_std, H_std)
             if candidate:
                 sx, sy, error = candidate
-                if error < best_error:
-                    best_error = error
-                    best_match = (variant_id, sx, sy, profile)
+                results.append((variant_id, sx, sy, profile, error))
 
             if self.allow_rotation:
                 candidate = self._evaluate_variant(W_obs, H_obs, H_std, W_std)
                 if candidate:
                     sx, sy, error = candidate
-                    if error < best_error:
-                        best_error = error
-                        best_match = (variant_id, sx, sy, profile)
+                    results.append((variant_id, sx, sy, profile, error))
 
-        return best_match
+        return results
 
     def _evaluate_variant(
         self, W_obs: float, H_obs: float, W_std: float, H_std: float

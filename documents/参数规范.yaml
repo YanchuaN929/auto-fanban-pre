@@ -703,6 +703,7 @@ titleblock_extract:
     CNPE_A1+1/4:   { W: 1051.0, H: 594.0,  profile: BASE10 }
     CNPE_A1H:      { W: 594.0,  H: 841.0,  profile: BASE10 }
     CNPE_A2:       { W: 594.0,  H: 420.0,  profile: BASE10 }
+    CNPE_A2H:      { W: 420.0,  H: 594.0,  profile: BASE10 }
     CNPE_A2+1/2:   { W: 891.0,  H: 420.0,  profile: BASE10 }
     # 小图幅（使用 SMALL5 ROI profile）
     CNPE_A3:       { W: 420.0,  H: 297.0,  profile: SMALL5 }
@@ -723,7 +724,7 @@ titleblock_extract:
   # 3.5 比例拟合配置
   # --------------------------------------------------------------------------
   scale_fit:
-    allow_rotation: true
+    allow_rotation: false
     uniform_scale_required: true
     uniform_scale_tol: 0.02  # 2%
     fit_error_metric: "max_rel_error(W,H)"
@@ -771,7 +772,7 @@ titleblock_extract:
         版次:       [173.2, 185.0, 113.0, 136.8]
         状态:       [139.2, 155.2, 113.0, 136.8]
         日期:       [155.2, 173.2, 113.0, 136.8]
-        锚点:       [5.0,   185.0, 47.0, 63.0]
+        锚点:       [100.6, 183.2, 73.6, 76.8]
 
   # --------------------------------------------------------------------------
   # 3.7 字段解析规则
@@ -857,9 +858,7 @@ titleblock_extract:
   anchor:
     search_text: ["本文件产权属中国核电工程有限公司（CNPE）所有，未经书面许可，不得以任何方式复制、传播、发表和外传。"]
     profile_priority: [BASE10, SMALL5]
-    match_policy: "double_hit_same_roi"
-    primary_text: "本文件产权属中国核电工程有限公司（CNPE）所有，未经书面许可，不得以任何方式复制、传播、发表和外传。"
-    secondary_text: "CNPE"
+    match_policy: "single_hit_same_roi"
     roi_field_name: "锚点"
 
   # --------------------------------------------------------------------------

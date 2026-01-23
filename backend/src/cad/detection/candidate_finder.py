@@ -38,25 +38,25 @@ class CandidateFinder:
         Returns:
             候选矩形的BBox列表（按面积降序）
         """
-        candidates: list[BBox] = []
-
+        poly_candidates: list[BBox] = []
         # 1. 从LWPOLYLINE提取
         for entity in msp.query("LWPOLYLINE"):
-            if entity.closed:
-                bbox = self._extract_bbox(entity)
-                if bbox and self._is_valid_size(bbox):
-                    candidates.append(bbox)
+            bbox = self._extract_bbox(entity)
+            if bbox and self._is_valid_size(bbox):
+                poly_candidates.append(bbox)
 
         # 2. 从POLYLINE提取
         for entity in msp.query("POLYLINE"):
-            if getattr(entity, "is_closed", False):
-                bbox = self._extract_bbox(entity)
-                if bbox and self._is_valid_size(bbox):
-                    candidates.append(bbox)
+            bbox = self._extract_bbox(entity)
+            if bbox and self._is_valid_size(bbox):
+                poly_candidates.append(bbox)
 
-        # 3. LINE重建矩形（兜底策略）
-        if not candidates:
-            candidates.extend(self._rebuild_from_lines(msp))
+        # 3. LINE重建矩形（补强策略，始终执行）
+        line_candidates = [
+            bbox for bbox in self._rebuild_from_lines(msp) if self._is_valid_size(bbox)
+        ]
+
+        candidates = self._dedupe_candidates(poly_candidates + line_candidates)
 
         # 按面积降序排序
         candidates.sort(key=lambda b: b.width * b.height, reverse=True)
@@ -106,6 +106,22 @@ class CandidateFinder:
 
     def _is_valid_size(self, bbox: BBox) -> bool:
         return bbox.width >= self.min_dim and bbox.height >= self.min_dim
+
+    def _dedupe_candidates(self, candidates: list[BBox]) -> list[BBox]:
+        seen: set[tuple[float, float, float, float]] = set()
+        unique: list[BBox] = []
+        for bbox in candidates:
+            key = (
+                round(bbox.xmin, 3),
+                round(bbox.ymin, 3),
+                round(bbox.xmax, 3),
+                round(bbox.ymax, 3),
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            unique.append(bbox)
+        return unique
 
     def _rebuild_from_lines(self, msp) -> list[BBox]:
         """从LINE实体重建矩形（兜底方案）"""

@@ -59,14 +59,15 @@ class AnchorFirstLocator:
         self.max_candidates = max_candidates
 
         anchor_cfg = self.spec.titleblock_extract.get("anchor", {})
-        self.primary_text = anchor_cfg.get("primary_text")
-        self.secondary_text = anchor_cfg.get("secondary_text")
-        if not self.primary_text or not self.secondary_text:
-            self.primary_text, self.secondary_text = self._derive_anchor_texts(
-                anchor_cfg.get("search_text", ["CNPE", "中国核电工程有限公司"])
-            )
+        texts = anchor_cfg.get("search_text", [])
+        if isinstance(texts, str):
+            texts = [texts]
+        primary_text = anchor_cfg.get("primary_text")
+        if primary_text:
+            texts = [primary_text, *texts]
+        self.anchor_texts = [t for t in texts if t]
         self.roi_field_name = anchor_cfg.get("roi_field_name", "锚点")
-        self.match_policy = anchor_cfg.get("match_policy", "double_hit_same_roi")
+        self.match_policy = anchor_cfg.get("match_policy", "single_hit_same_roi")
 
         tolerances = self.spec.titleblock_extract.get("tolerances", {})
         self.roi_margin_percent = float(tolerances.get("roi_margin_percent", 0.0))
@@ -79,12 +80,17 @@ class AnchorFirstLocator:
     def locate_frames(self, msp, dxf_path: Path) -> list[FrameMeta]:
         """执行锚点优先定位，返回FrameMeta列表"""
         text_items = list(self._iter_text_items(msp))
-        primary_items = [t for t in text_items if self._match_text(t.text, self.primary_text)]
-        secondary_items = [t for t in text_items if self._match_text(t.text, self.secondary_text)]
-
         candidates = self._build_candidates(msp)
         if not candidates:
             return []
+
+        anchor_items = [
+            t for t in text_items if self._match_any_text(t.text, self.anchor_texts)
+        ]
+        # 只保留落在任一候选锚点ROI内的锚点文本，避免无关文本噪声
+        anchor_items = [
+            t for t in anchor_items if self._is_in_any_anchor_roi(t, candidates)
+        ]
 
         a4_clusters = self._build_a4_clusters([c for c in candidates if self._is_a4_candidate(c)])
         a4_cluster_map = self._cluster_lookup(a4_clusters)
@@ -92,16 +98,9 @@ class AnchorFirstLocator:
         frames: list[FrameMeta] = []
         used_candidates: set[tuple[float, float, float, float]] = set()
 
-        for idx, anchor_item in enumerate(primary_items, start=1):
-            matches = self._find_matching_candidates(anchor_item, secondary_items, candidates)
+        for anchor_item in anchor_items:
+            matches = self._find_matching_candidates(anchor_item, candidates)
             if not matches:
-                self.logger.warning(
-                    "锚点未能反推外框: anchor_id=%s text=%s x=%.3f y=%.3f",
-                    idx,
-                    anchor_item.text,
-                    anchor_item.x,
-                    anchor_item.y,
-                )
                 continue
 
             selected = min(matches, key=lambda c: (c.fit_error, c.area))
@@ -118,52 +117,53 @@ class AnchorFirstLocator:
     def _find_matching_candidates(
         self,
         anchor_item: TextItem,
-        secondary_items: list[TextItem],
         candidates: list[CandidateFrame],
     ) -> list[CandidateFrame]:
         matches: list[CandidateFrame] = []
         for cand in candidates:
             if not self._text_in_roi(anchor_item, cand.anchor_roi):
                 continue
-            if self.match_policy == "double_hit_same_roi":
-                if not self._roi_has_text(secondary_items, cand.anchor_roi):
-                    continue
-            elif self.match_policy == "any_hit_accept":
+            if self.match_policy == "single_hit_same_roi":
                 pass
             matches.append(cand)
         return matches
 
     def _build_candidates(self, msp) -> list[CandidateFrame]:
         candidates: list[CandidateFrame] = []
-        for bbox in self.candidate_finder.find_rectangles(msp):
-            fit = self.paper_fitter.fit(bbox, self.paper_variants)
-            if not fit:
-                continue
-            paper_id, sx, sy, profile_id = fit
-            profile = self.spec.get_roi_profile(profile_id)
-            if not profile:
-                continue
-            rb_offset = profile.fields.get(self.roi_field_name)
-            if not rb_offset:
-                continue
-            anchor_roi = self._restore_roi(bbox, rb_offset, sx, sy)
-            anchor_roi = self._expand_roi(anchor_roi, self.roi_margin_percent)
-            fit_error = self._compute_fit_error(bbox, paper_id, sx, sy)
-            candidates.append(
-                CandidateFrame(
-                    bbox=bbox,
-                    paper_variant_id=paper_id,
-                    sx=sx,
-                    sy=sy,
-                    roi_profile_id=profile_id,
-                    anchor_roi=anchor_roi,
-                    fit_error=fit_error,
+        bboxes = self.candidate_finder.find_rectangles(msp)
+        for bbox in bboxes:
+            for paper_id, sx, sy, profile_id, error in self.paper_fitter.fit_all(
+                bbox, self.paper_variants
+            ):
+                profile = self.spec.get_roi_profile(profile_id)
+                if not profile:
+                    continue
+                rb_offset = profile.fields.get(self.roi_field_name)
+                if not rb_offset:
+                    continue
+                anchor_roi = self._restore_roi(bbox, rb_offset, sx, sy)
+                anchor_roi = self._expand_roi(anchor_roi, self.roi_margin_percent)
+                candidates.append(
+                    CandidateFrame(
+                        bbox=bbox,
+                        paper_variant_id=paper_id,
+                        sx=sx,
+                        sy=sy,
+                        roi_profile_id=profile_id,
+                        anchor_roi=anchor_roi,
+                        fit_error=error,
+                    )
                 )
-            )
 
         candidates.sort(key=lambda c: c.area, reverse=True)
         if self.max_candidates:
-            candidates = candidates[: self.max_candidates]
+            top_keys = {
+                self._bbox_key(b)
+                for b in sorted(bboxes, key=lambda b: b.width * b.height, reverse=True)[
+                    : self.max_candidates
+                ]
+            }
+            candidates = [c for c in candidates if self._candidate_key(c) in top_keys]
         return candidates
 
     def _append_candidate_frame(
@@ -200,23 +200,15 @@ class AnchorFirstLocator:
 
     @staticmethod
     def _candidate_key(cand: CandidateFrame) -> tuple[float, float, float, float]:
-        return (
-            round(cand.bbox.xmin, 3),
-            round(cand.bbox.ymin, 3),
-            round(cand.bbox.xmax, 3),
-            round(cand.bbox.ymax, 3),
-        )
+        return AnchorFirstLocator._bbox_key(cand.bbox)
 
-    def _compute_fit_error(self, bbox: BBox, paper_id: str, sx: float, sy: float) -> float:
-        variant = self.paper_variants.get(paper_id)
-        if not variant:
-            return float("inf")
-        W_std = float(variant.W)
-        H_std = float(variant.H)
-        scale = (sx + sy) / 2
-        return max(
-            abs(W_std * scale - bbox.width) / max(bbox.width, 1e-9),
-            abs(H_std * scale - bbox.height) / max(bbox.height, 1e-9),
+    @staticmethod
+    def _bbox_key(bbox: BBox) -> tuple[float, float, float, float]:
+        return (
+            round(bbox.xmin, 3),
+            round(bbox.ymin, 3),
+            round(bbox.xmax, 3),
+            round(bbox.ymax, 3),
         )
 
     def _build_a4_clusters(self, a4_candidates: list[CandidateFrame]) -> list[list[CandidateFrame]]:
@@ -275,38 +267,31 @@ class AnchorFirstLocator:
         return "A4" in cand.paper_variant_id
 
     @staticmethod
-    def _derive_anchor_texts(search_texts: Iterable[str]) -> tuple[str, str]:
-        primary = ""
-        secondary = ""
-        for text in search_texts:
-            if not text:
-                continue
-            if text.isascii():
-                secondary = secondary or text
-            else:
-                primary = primary or text
-        if not primary and secondary:
-            primary = secondary
-        if not secondary and primary:
-            secondary = primary
-        return primary, secondary
-
-    @staticmethod
     def _normalize_anchor(text: str) -> str:
         return "".join(ch for ch in (text or "") if not ch.isspace())
 
-    def _match_text(self, text: str, pattern: str) -> bool:
-        if not pattern:
-            return False
+    def _match_any_text(self, text: str, patterns: Iterable[str]) -> bool:
         normalized = self._normalize_anchor(text)
-        if pattern.isascii():
-            return pattern.upper() in normalized.upper()
-        return pattern in normalized
+        for pattern in patterns:
+            if not pattern:
+                continue
+            if pattern.isascii():
+                if pattern.upper() in normalized.upper():
+                    return True
+            else:
+                if pattern in normalized:
+                    return True
+        return False
 
     def _text_in_roi(self, item: TextItem, roi: BBox) -> bool:
         return self._point_in_bbox(item.x, item.y, roi) or (
             item.bbox is not None and roi.intersects(item.bbox)
         )
+
+    def _is_in_any_anchor_roi(
+        self, item: TextItem, candidates: list[CandidateFrame]
+    ) -> bool:
+        return any(self._text_in_roi(item, cand.anchor_roi) for cand in candidates)
 
     def _roi_has_text(self, items: list[TextItem], roi: BBox) -> bool:
         return any(self._text_in_roi(item, roi) for item in items)
