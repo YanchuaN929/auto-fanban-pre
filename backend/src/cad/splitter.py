@@ -21,6 +21,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from contextlib import suppress
 from pathlib import Path
 
 import ezdxf
@@ -49,12 +51,7 @@ class FrameSplitter(IFrameSplitter):
             margins = margins["default"]
         self.margins = margins or {"top": 20, "bottom": 10, "left": 20, "right": 10}
 
-    def split_frame(
-        self,
-        dxf_path: Path,
-        frame: FrameMeta,
-        output_dir: Path
-    ) -> tuple[Path, Path]:
+    def split_frame(self, dxf_path: Path, frame: FrameMeta, output_dir: Path) -> tuple[Path, Path]:
         """拆分单个图框并输出PDF+DWG"""
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -79,20 +76,74 @@ class FrameSplitter(IFrameSplitter):
 
         return pdf_path, dwg_path
 
-    def split_sheet_set(
+    def split_frames_batch(
         self,
         dxf_path: Path,
-        sheet_set: SheetSet,
-        output_dir: Path
+        frames: list[FrameMeta],
+        output_dir: Path,
+        progress_cb: Callable[[int], None] | None = None,
+        progress_every: int = 5000,
+    ) -> list[tuple[FrameMeta, Path, Path]]:
+        """批量拆分同一DXF内的多个图框（一次读取，多框分发）"""
+        if not frames:
+            return []
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        doc = ezdxf.readfile(str(dxf_path))
+        msp = doc.modelspace()
+
+        clip_infos: list[dict] = []
+        for frame in frames:
+            clip_bbox = self._calc_clip_bbox(frame.runtime.outer_bbox)
+            internal_code = frame.titleblock.internal_code or frame.frame_id[:8]
+            output_path = output_dir / f"{internal_code}.dxf"
+            new_doc = ezdxf.new(dxfversion=doc.dxfversion)
+            new_msp = new_doc.modelspace()
+            clip_infos.append(
+                {
+                    "frame": frame,
+                    "clip_bbox": clip_bbox,
+                    "doc": new_doc,
+                    "msp": new_msp,
+                    "output_path": output_path,
+                }
+            )
+
+        union_bbox = self._calc_union_bbox([ci["clip_bbox"] for ci in clip_infos])
+        for idx, entity in enumerate(msp, start=1):
+            entity_bbox = self._get_entity_bbox(entity)
+            if entity_bbox and not union_bbox.intersects(entity_bbox):
+                continue
+            for info in clip_infos:
+                clip_bbox = info["clip_bbox"]
+                if entity_bbox is None or clip_bbox.intersects(entity_bbox):
+                    with suppress(Exception):
+                        info["msp"].add_foreign_entity(entity)
+            if progress_cb and progress_every > 0 and idx % progress_every == 0:
+                progress_cb(idx)
+
+        results: list[tuple[FrameMeta, Path, Path]] = []
+        for info in clip_infos:
+            output_path = info["output_path"]
+            info["doc"].saveas(str(output_path))
+
+            frame = info["frame"]
+            pdf_path = self._export_pdf(output_path, frame)
+            dwg_path = self.oda.dxf_to_dwg(output_path, output_dir)
+            frame.runtime.pdf_path = pdf_path
+            frame.runtime.dwg_path = dwg_path
+            results.append((frame, pdf_path, dwg_path))
+
+        return results
+
+    def split_sheet_set(
+        self, dxf_path: Path, sheet_set: SheetSet, output_dir: Path
     ) -> tuple[Path, Path]:
         """拆分A4多页成组并输出多页PDF+DWG"""
         output_dir.mkdir(parents=True, exist_ok=True)
 
         # 1. 计算所有页面的裁切边界
-        clip_bboxes = [
-            self._calc_clip_bbox(page.outer_bbox)
-            for page in sheet_set.pages
-        ]
+        clip_bboxes = [self._calc_clip_bbox(page.outer_bbox) for page in sheet_set.pages]
 
         # 2. 计算union bbox（所有页面的并集）
         union_bbox = self._calc_union_bbox(clip_bboxes)
@@ -153,11 +204,10 @@ class FrameSplitter(IFrameSplitter):
 
         # 复制与clip_bbox相交的实体
         for entity in msp:
-            if self._entity_intersects_bbox(entity, clip_bbox):
-                try:
+            entity_bbox = self._get_entity_bbox(entity)
+            if entity_bbox is None or clip_bbox.intersects(entity_bbox):
+                with suppress(Exception):
                     new_msp.add_foreign_entity(entity)
-                except Exception:
-                    pass  # 某些实体可能无法复制
 
         # 输出文件名
         internal_code = frame.titleblock.internal_code or frame.frame_id[:8]
@@ -183,13 +233,14 @@ class FrameSplitter(IFrameSplitter):
         new_msp = new_doc.modelspace()
 
         for entity in msp:
+            entity_bbox = self._get_entity_bbox(entity)
+            if entity_bbox and not union_bbox.intersects(entity_bbox):
+                continue
             # 检查是否与任一clip_bbox相交
             for clip_bbox in clip_bboxes:
-                if self._entity_intersects_bbox(entity, clip_bbox):
-                    try:
+                if entity_bbox is None or clip_bbox.intersects(entity_bbox):
+                    with suppress(Exception):
                         new_msp.add_foreign_entity(entity)
-                    except Exception:
-                        pass
                     break  # 只复制一次
 
         output_path = output_dir / f"{internal_code or 'sheet_set'}.dxf"
@@ -197,25 +248,21 @@ class FrameSplitter(IFrameSplitter):
 
         return output_path
 
-    def _entity_intersects_bbox(self, entity, bbox: BBox) -> bool:
-        """判断实体是否与bbox相交"""
+    def _get_entity_bbox(self, entity) -> BBox | None:
+        """获取实体边界框，失败返回None"""
         try:
-            # 获取实体边界
             if hasattr(entity, "bbox"):
                 eb = entity.bbox()
                 if eb:
-                    entity_bbox = BBox(
+                    return BBox(
                         xmin=eb.extmin.x,
                         ymin=eb.extmin.y,
                         xmax=eb.extmax.x,
                         ymax=eb.extmax.y,
                     )
-                    return bbox.intersects(entity_bbox)
         except Exception:
-            pass
-
-        # 无法获取边界时，默认保留
-        return True
+            return None
+        return None
 
     def _export_pdf(self, dxf_path: Path, frame: FrameMeta) -> Path:
         """导出PDF"""
@@ -225,12 +272,7 @@ class FrameSplitter(IFrameSplitter):
         # pdf_path.touch()
         return pdf_path
 
-    def _export_multipage_pdf(
-        self,
-        dxf_path: Path,
-        sheet_set: SheetSet,
-        output_dir: Path
-    ) -> Path:
+    def _export_multipage_pdf(self, dxf_path: Path, sheet_set: SheetSet, output_dir: Path) -> Path:
         """导出多页PDF"""
         # TODO: 实现多页PDF导出
         # 优先：逐页窗口打印，再合并

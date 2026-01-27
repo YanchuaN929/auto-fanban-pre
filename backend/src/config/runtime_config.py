@@ -19,6 +19,7 @@ from pydantic_settings import BaseSettings
 
 class ConcurrencyConfig(BaseModel):
     """并发配置"""
+
     max_workers: int = 2
     max_jobs: int = 4
     max_queue: int = 20
@@ -26,6 +27,7 @@ class ConcurrencyConfig(BaseModel):
 
 class TimeoutConfig(BaseModel):
     """超时配置"""
+
     oda_convert_sec: int = 600
     office_export_sec: int = 300
     pdf_export_sec: int = 300
@@ -33,24 +35,28 @@ class TimeoutConfig(BaseModel):
 
 class RetryConfig(BaseModel):
     """重试配置"""
+
     max_retries: int = 2
     retry_backoff_ms: int = 1000
 
 
 class ODAConfig(BaseModel):
     """ODA转换器配置"""
+
     exe_path: str = ""
     work_dir: str | None = None
 
 
 class PDFEngineConfig(BaseModel):
     """PDF引擎配置"""
+
     preferred: str = "office_com"
     fallback: str = "libreoffice"
 
 
 class UploadLimitsConfig(BaseModel):
     """上传限制"""
+
     max_files: int = 50
     max_total_mb: int = 2048
     allowed_exts: list[str] = Field(default_factory=lambda: [".dwg"])
@@ -59,6 +65,7 @@ class UploadLimitsConfig(BaseModel):
 
 class LifecycleConfig(BaseModel):
     """生命周期配置"""
+
     retention_hours: int = 168
     cleanup_on_cancel: bool = True
     cleanup_cron: str = "0 3 * * *"
@@ -66,6 +73,7 @@ class LifecycleConfig(BaseModel):
 
 class LoggingConfig(BaseModel):
     """日志配置"""
+
     log_level: str = "INFO"
     log_to_file: bool = True
 

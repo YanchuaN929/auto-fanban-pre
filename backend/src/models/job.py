@@ -44,6 +44,7 @@ class JobProgress(BaseModel):
     percent: int = 0
     current_file: str | None = None
     message: str = ""
+    details: dict[str, Any] = Field(default_factory=dict)
 
 
 class Job(BaseModel):

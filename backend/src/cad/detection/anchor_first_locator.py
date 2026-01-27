@@ -78,40 +78,88 @@ class AnchorFirstLocator:
         self.logger = logging.getLogger(__name__)
 
     def locate_frames(self, msp, dxf_path: Path) -> list[FrameMeta]:
-        """执行锚点优先定位，返回FrameMeta列表"""
+        """执行锚点驱动定位，返回FrameMeta列表"""
         text_items = list(self._iter_text_items(msp))
-        candidates = self._build_candidates(msp)
-        if not candidates:
+        anchor_items = [t for t in text_items if self._match_any_text(t.text, self.anchor_texts)]
+        self.logger.info(
+            "锚点扫描: dxf=%s texts=%d anchors=%d",
+            dxf_path.name,
+            len(text_items),
+            len(anchor_items),
+        )
+
+        if not anchor_items:
+            self.logger.info("锚点定位结束: dxf=%s 未找到锚点文本", dxf_path.name)
             return []
 
-        anchor_items = [
-            t for t in text_items if self._match_any_text(t.text, self.anchor_texts)
-        ]
-        # 只保留落在任一候选锚点ROI内的锚点文本，避免无关文本噪声
-        anchor_items = [
-            t for t in anchor_items if self._is_in_any_anchor_roi(t, candidates)
-        ]
+        candidates = self._build_candidates(msp)
+        self.logger.info(
+            "候选外框: dxf=%s candidates=%d",
+            dxf_path.name,
+            len(candidates),
+        )
+        if not candidates:
+            self.logger.info("锚点定位结束: dxf=%s 未找到候选外框", dxf_path.name)
+            return []
 
-        a4_clusters = self._build_a4_clusters([c for c in candidates if self._is_a4_candidate(c)])
+        a4_candidates = [c for c in candidates if self._is_a4_candidate(c)]
+        a4_clusters = self._build_a4_clusters(a4_candidates)
         a4_cluster_map = self._cluster_lookup(a4_clusters)
+        if a4_candidates:
+            self.logger.info(
+                "A4簇统计: dxf=%s clusters=%d a4_candidates=%d",
+                dxf_path.name,
+                len(a4_clusters),
+                len(a4_candidates),
+            )
 
         frames: list[FrameMeta] = []
         used_candidates: set[tuple[float, float, float, float]] = set()
 
-        for anchor_item in anchor_items:
+        for idx, anchor_item in enumerate(anchor_items, start=1):
             matches = self._find_matching_candidates(anchor_item, candidates)
+            self.logger.info(
+                "锚点匹配: index=%d x=%.3f y=%.3f matches=%d text=%s",
+                idx,
+                anchor_item.x,
+                anchor_item.y,
+                len(matches),
+                self._short_text(anchor_item.text),
+            )
             if not matches:
                 continue
 
             selected = min(matches, key=lambda c: (c.fit_error, c.area))
+            self.logger.info(
+                "锚点->外框: index=%d variant=%s sx=%.4f sy=%.4f profile=%s bbox=(%.3f,%.3f,%.3f,%.3f)",
+                idx,
+                selected.paper_variant_id,
+                selected.sx,
+                selected.sy,
+                selected.roi_profile_id,
+                selected.bbox.xmin,
+                selected.bbox.ymin,
+                selected.bbox.xmax,
+                selected.bbox.ymax,
+            )
             self._append_candidate_frame(selected, dxf_path, frames, used_candidates)
 
             # A4扩展：加入同簇外框（无需锚点）
             if self._is_a4_candidate(selected):
                 cluster = a4_cluster_map.get(self._candidate_key(selected), [])
+                self.logger.info(
+                    "A4扩展: index=%d cluster_size=%d",
+                    idx,
+                    len(cluster),
+                )
                 for cand in cluster:
                     self._append_candidate_frame(cand, dxf_path, frames, used_candidates)
 
+        self.logger.info(
+            "锚点定位完成: dxf=%s frames=%d",
+            dxf_path.name,
+            len(frames),
+        )
         return frames
 
     def _find_matching_candidates(
@@ -270,6 +318,15 @@ class AnchorFirstLocator:
     def _normalize_anchor(text: str) -> str:
         return "".join(ch for ch in (text or "") if not ch.isspace())
 
+    @staticmethod
+    def _short_text(text: str, max_len: int = 60) -> str:
+        if not text:
+            return ""
+        compact = " ".join(text.split())
+        if len(compact) <= max_len:
+            return compact
+        return f"{compact[:max_len]}..."
+
     def _match_any_text(self, text: str, patterns: Iterable[str]) -> bool:
         normalized = self._normalize_anchor(text)
         for pattern in patterns:
@@ -288,9 +345,7 @@ class AnchorFirstLocator:
             item.bbox is not None and roi.intersects(item.bbox)
         )
 
-    def _is_in_any_anchor_roi(
-        self, item: TextItem, candidates: list[CandidateFrame]
-    ) -> bool:
+    def _is_in_any_anchor_roi(self, item: TextItem, candidates: list[CandidateFrame]) -> bool:
         return any(self._text_in_roi(item, cand.anchor_roi) for cand in candidates)
 
     def _roi_has_text(self, items: list[TextItem], roi: BBox) -> bool:

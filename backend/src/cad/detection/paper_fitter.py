@@ -18,7 +18,7 @@ class PaperFitter:
 
     def __init__(
         self,
-        allow_rotation: bool = True,
+        allow_rotation: bool = False,
         uniform_scale_required: bool = True,
         uniform_scale_tol: float = 0.02,
         error_metric: str = "max_rel_error(W,H)",
